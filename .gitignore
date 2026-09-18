@@ -1,0 +1,45 @@
+# Dependency directories
+node_modules/
+client/node_modules/
+server/node_modules/
+**/node_modules/
+
+# Environment configurations and secrets
+.env
+.env.*
+!.env.example
+client/.env
+client/.env.*
+!client/.env.example
+!client/.env.production
+server/.env
+server/.env.*
+!server/.env.example
+*.local
+*.pem
+*.key
+
+# Binary executables and standalone tunnels
+cloudflared.exe
+*.exe
+
+# User-uploaded file assets (preserve folder structure with .gitkeep)
+server/uploads/reports/*
+!server/uploads/reports/.gitkeep
+server/uploads/resolutions/*
+!server/uploads/resolutions/.gitkeep
+
+# Build artifacts
+dist/
+build/
+client/dist/
+
+# OS and IDE caches
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+.system_generated/

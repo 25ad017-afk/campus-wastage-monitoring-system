@@ -1,0 +1,11 @@
+{
+  "folders": [
+    {
+      "name": "Campus Wastage Monitoring System",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "window.title": "Campus Wastage Monitoring System - ${dirty}${activeEditorShort}${separator}${rootName}"
+  }
+}

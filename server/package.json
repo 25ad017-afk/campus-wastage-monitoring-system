@@ -1,0 +1,39 @@
+{
+  "name": "campus-waste-monitoring-server",
+  "version": "1.0.0",
+  "description": "Backend REST API for Campus Wastage Monitoring System (CWMS)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "db:init": "node scripts/initDb.js",
+    "test:e2e": "node scripts/simulateWorkflows.js",
+    "demo:seed": "node scripts/seedDemoData.js",
+    "demo:reset": "node scripts/resetDemoData.js"
+  },
+  "keywords": [
+    "campus-waste",
+    "waste-management",
+    "smart-campus",
+    "express",
+    "mysql"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.10.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  },
+  "optionalDependencies": {
+    "sqlite3": "^6.0.1"
+  }
+}

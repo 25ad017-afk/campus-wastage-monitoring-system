@@ -1,0 +1,10 @@
+{
+  "name": "campus-wastage-monitoring-system",
+  "version": "1.0.0",
+  "description": "Campus Wastage Monitoring System (CWMS) - Akshaya College of Engineering and Technology",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ]
+}
