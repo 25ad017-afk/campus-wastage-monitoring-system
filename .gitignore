@@ -41,5 +41,6 @@ Thumbs.db
 .idea/
 *.log
 npm-debug.log*
-yarn-debug.log*
 .system_generated/
+push_to_github.bat
+
