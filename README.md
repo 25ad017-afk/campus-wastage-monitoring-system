@@ -1,0 +1,1 @@
+# campus-wastage-monitoring-system
