@@ -64,22 +64,34 @@ const LoginPage = () => {
       <div className="card" style={{ padding: '2.5rem 2rem' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          {/* College Branding Banner */}
           <div
             style={{
-              width: '48px',
-              height: '48px',
+              background: '#ffffff',
               borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, var(--primary-600), var(--primary-800))',
-              color: '#ffffff',
-              display: 'flex',
+              padding: '0.4rem 0.8rem',
+              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 1rem auto',
-              boxShadow: 'var(--shadow-sm)'
+              marginBottom: '1rem',
+              border: '1px solid var(--border-color)',
+              maxWidth: '100%'
             }}
           >
-            <LogIn size={24} />
+            <img
+              src="/assets/images/college_banner.jpeg"
+              alt="Akshaya College of Engineering and Technology"
+              style={{
+                maxHeight: '48px',
+                maxWidth: '100%',
+                width: 'auto',
+                height: 'auto',
+                objectFit: 'contain',
+                display: 'block'
+              }}
+            />
           </div>
+
           <div
             style={{
               display: 'inline-flex',

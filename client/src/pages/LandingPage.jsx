@@ -53,6 +53,35 @@ const LandingPage = () => {
         />
 
         <div className="container" style={{ position: 'relative', zIndex: 1, maxWidth: '960px', textAlign: 'center' }}>
+          {/* College Header / Banner Image Branding */}
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: 'var(--radius-md)',
+              padding: '0.6rem 1.2rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1.5rem',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+              maxWidth: '92%',
+              border: '1px solid rgba(255, 255, 255, 0.3)'
+            }}
+          >
+            <img
+              src="/assets/images/college_banner.jpeg"
+              alt="Akshaya College of Engineering and Technology"
+              style={{
+                maxHeight: '68px',
+                maxWidth: '100%',
+                width: 'auto',
+                height: 'auto',
+                objectFit: 'contain',
+                display: 'block'
+              }}
+            />
+          </div>
+
           <div
             style={{
               display: 'inline-flex',

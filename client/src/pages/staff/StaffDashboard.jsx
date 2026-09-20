@@ -202,14 +202,36 @@ const StaffDashboard = () => {
           border: '1px solid var(--slate-700)'
         }}
       >
-        <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid rgba(245, 158, 11, 0.4)', padding: '0.2rem 0.65rem', borderRadius: 'var(--radius-full)', color: '#fcd34d', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-            <HardHat size={14} /> Sanitation Operational Terminal
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
+            <div
+              style={{
+                background: '#ffffff',
+                padding: '0.25rem 0.6rem',
+                borderRadius: 'var(--radius-sm)',
+                display: 'inline-flex',
+                alignItems: 'center'
+              }}
+            >
+              <img
+                src="/assets/images/college_banner.jpeg"
+                alt="Akshaya College of Engineering and Technology"
+                style={{
+                  maxHeight: '36px',
+                  maxWidth: '150px',
+                  objectFit: 'contain',
+                  display: 'block'
+                }}
+              />
+            </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid rgba(245, 158, 11, 0.4)', padding: '0.2rem 0.65rem', borderRadius: 'var(--radius-full)', color: '#fcd34d', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
+              <HardHat size={14} /> Sanitation Operational Terminal
+            </div>
           </div>
-          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', marginTop: '0.2rem' }}>
             {staffInfo?.employeeCode ? `${staffInfo.employeeCode} - ` : ''}{user?.fullName}
           </h1>
-          <p style={{ color: 'var(--slate-300)', fontSize: '0.92rem', marginTop: '0.25rem' }}>
+          <p style={{ color: 'var(--slate-300)', fontSize: '0.92rem', marginTop: '0.1rem' }}>
             Primary Assigned Sector: <strong>{staffInfo?.assignedZone || 'General Campus'}</strong>
           </p>
         </div>

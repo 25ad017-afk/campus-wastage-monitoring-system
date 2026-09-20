@@ -74,10 +74,33 @@ const AdminDashboard = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem', marginBottom: '2.25rem' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--tech-blue-700)', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            <Shield size={16} /> Campus Facilities &amp; Sanitation Command
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+            <div
+              style={{
+                background: '#ffffff',
+                padding: '0.2rem 0.5rem',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-color)',
+                display: 'inline-flex',
+                alignItems: 'center'
+              }}
+            >
+              <img
+                src="/assets/images/college_banner.jpeg"
+                alt="Akshaya College of Engineering and Technology"
+                style={{
+                  maxHeight: '34px',
+                  maxWidth: '140px',
+                  objectFit: 'contain',
+                  display: 'block'
+                }}
+              />
+            </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--tech-blue-700)', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <Shield size={16} /> Campus Facilities &amp; Sanitation Command
+            </div>
           </div>
-          <h1 style={{ fontSize: '1.9rem', fontWeight: 800, marginTop: '0.35rem', color: 'var(--slate-900)' }}>
+          <h1 style={{ fontSize: '1.9rem', fontWeight: 800, marginTop: '0.2rem', color: 'var(--slate-900)' }}>
             Facilities Operations Command Center
           </h1>
           <p style={{ color: 'var(--slate-500)', fontSize: '0.92rem', marginTop: '0.2rem' }}>

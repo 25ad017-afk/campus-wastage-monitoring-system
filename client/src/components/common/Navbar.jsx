@@ -101,14 +101,37 @@ const Navbar = () => {
       </div>
 
       <div className="container navbar-container">
-        {/* Institutional Brand Logo */}
-        <Link to="/" className="nav-brand">
-          <div className="brand-icon">
-            <Sparkles size={20} />
+        {/* Institutional Brand Logo with College Branding */}
+        <Link to="/" className="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', textDecoration: 'none' }}>
+          <div
+            style={{
+              background: '#ffffff',
+              padding: '0.2rem 0.5rem',
+              borderRadius: 'var(--radius-sm)',
+              boxShadow: 'var(--shadow-sm)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <img
+              src="/assets/images/college_banner.jpeg"
+              alt="Akshaya College of Engineering and Technology"
+              style={{
+                height: '38px',
+                maxWidth: '170px',
+                objectFit: 'contain',
+                display: 'block'
+              }}
+            />
           </div>
-          <div>
-            <span className="brand-title">ACET CAMPUS</span>
-            <span className="brand-subtitle">Automated Wastage Monitoring System • ACET Coimbatore</span>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span className="brand-title" style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--slate-900)' }}>
+              CWMS PORTAL
+            </span>
+            <span className="brand-subtitle" style={{ fontSize: '0.70rem', color: 'var(--slate-500)', fontWeight: 600 }}>
+              Akshaya College of Engineering and Technology
+            </span>
           </div>
         </Link>
 

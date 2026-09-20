@@ -81,14 +81,36 @@ const StudentDashboard = () => {
           border: '1px solid var(--slate-700)'
         }}
       >
-        <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.4)', padding: '0.2rem 0.65rem', borderRadius: 'var(--radius-full)', color: 'var(--primary-300)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-            <Sparkles size={14} /> Student Sanitation Representative
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
+            <div
+              style={{
+                background: '#ffffff',
+                padding: '0.25rem 0.6rem',
+                borderRadius: 'var(--radius-sm)',
+                display: 'inline-flex',
+                alignItems: 'center'
+              }}
+            >
+              <img
+                src="/assets/images/college_banner.jpeg"
+                alt="Akshaya College of Engineering and Technology"
+                style={{
+                  maxHeight: '36px',
+                  maxWidth: '150px',
+                  objectFit: 'contain',
+                  display: 'block'
+                }}
+              />
+            </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.4)', padding: '0.2rem 0.65rem', borderRadius: 'var(--radius-full)', color: 'var(--primary-300)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
+              <Sparkles size={14} /> Student Sanitation Representative
+            </div>
           </div>
-          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', marginTop: '0.2rem' }}>
             Welcome back, {user?.fullName?.split(' ')[0]}!
           </h1>
-          <p style={{ color: 'var(--slate-300)', fontSize: '0.92rem', marginTop: '0.25rem' }}>
+          <p style={{ color: 'var(--slate-300)', fontSize: '0.92rem', marginTop: '0.1rem' }}>
             Active campus waste reporting console and real-time status tracker.
           </p>
         </div>
