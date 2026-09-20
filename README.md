@@ -136,4 +136,3 @@ Open your browser at **`http://localhost:3000`**.
 
 ## 📄 License
 Academic and operational platform for **Akshaya College of Engineering and Technology (ACET)**.
-
