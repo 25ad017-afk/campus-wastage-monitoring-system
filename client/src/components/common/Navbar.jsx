@@ -127,7 +127,7 @@ const Navbar = () => {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span className="brand-title" style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--slate-900)' }}>
-              CWMS PORTAL
+              ACET Portal
             </span>
             <span className="brand-subtitle" style={{ fontSize: '0.70rem', color: 'var(--slate-500)', fontWeight: 600 }}>
               Akshaya College of Engineering and Technology

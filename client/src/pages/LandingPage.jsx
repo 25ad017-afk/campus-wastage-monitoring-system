@@ -112,7 +112,7 @@ const LandingPage = () => {
               color: '#ffffff'
             }}
           >
-            Automated Campus Wastage Monitoring &amp; <span style={{ color: 'var(--primary-400)' }}>Rapid Remediation</span>
+            Campus Wastage Monitoring System
           </h1>
 
           <p
