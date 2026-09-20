@@ -31,41 +31,43 @@ const LandingPage = () => {
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '4rem' }}>
-      {/* Hero Section */}
+      {/* Hero Section with Official ACET Campus Aerial Photograph */}
       <section
         style={{
-          background: 'linear-gradient(180deg, var(--slate-900) 0%, var(--slate-800) 100%)',
-          color: '#ffffff',
-          padding: '4.5rem 0 4rem 0',
           position: 'relative',
+          backgroundImage: 'url(/assets/images/campus_aerial.webp)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          color: '#ffffff',
+          padding: '5.5rem 0 5rem 0',
           overflow: 'hidden'
         }}
       >
-        {/* Subtle grid background accent */}
+        {/* Subtle dark-green transparent overlay for high text legibility without obscuring campus aerial view */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 0)',
-            backgroundSize: '24px 24px',
+            background: 'linear-gradient(180deg, rgba(6, 26, 17, 0.72) 0%, rgba(15, 23, 42, 0.78) 100%)',
             pointerEvents: 'none'
           }}
         />
 
-        <div className="container" style={{ position: 'relative', zIndex: 1, maxWidth: '960px', textAlign: 'center' }}>
+        <div className="container" style={{ position: 'relative', zIndex: 1, maxWidth: '980px', textAlign: 'center' }}>
           {/* College Header / Banner Image Branding */}
           <div
             style={{
               background: '#ffffff',
               borderRadius: 'var(--radius-md)',
-              padding: '0.6rem 1.2rem',
+              padding: '0.65rem 1.25rem',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '1.5rem',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35)',
               maxWidth: '92%',
-              border: '1px solid rgba(255, 255, 255, 0.3)'
+              border: '1px solid rgba(255, 255, 255, 0.4)'
             }}
           >
             <img
@@ -87,11 +89,12 @@ const LandingPage = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
-              background: 'rgba(16, 185, 129, 0.15)',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              padding: '0.45rem 1.2rem',
+              background: 'rgba(16, 185, 129, 0.25)',
+              border: '1px solid rgba(16, 185, 129, 0.5)',
+              backdropFilter: 'blur(6px)',
+              padding: '0.45rem 1.25rem',
               borderRadius: 'var(--radius-full)',
-              color: 'var(--primary-300)',
+              color: '#6ee7b7',
               fontWeight: 700,
               fontSize: '0.82rem',
               letterSpacing: '0.04em',
@@ -104,25 +107,41 @@ const LandingPage = () => {
 
           <h1
             style={{
-              fontSize: 'clamp(2.1rem, 5vw, 3.5rem)',
+              fontSize: 'clamp(2.3rem, 5.5vw, 3.8rem)',
               fontWeight: 800,
               letterSpacing: '-0.03em',
               lineHeight: 1.15,
-              marginBottom: '1.25rem',
-              color: '#ffffff'
+              marginBottom: '0.85rem',
+              color: '#ffffff',
+              textShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
             }}
           >
             Campus Wastage Monitoring System
           </h1>
 
+          {/* Subtitle */}
           <p
             style={{
-              fontSize: '1.12rem',
-              color: 'var(--slate-300)',
+              fontSize: '1.35rem',
+              fontWeight: 600,
+              color: 'var(--primary-300)',
+              marginBottom: '1.25rem',
+              letterSpacing: '-0.01em',
+              textShadow: '0 1px 4px rgba(0, 0, 0, 0.4)'
+            }}
+          >
+            🌿 A cleaner campus today, a greener tomorrow
+          </p>
+
+          <p
+            style={{
+              fontSize: '1.08rem',
+              color: 'rgba(255, 255, 255, 0.92)',
               marginBottom: '2.5rem',
               lineHeight: 1.65,
-              maxWidth: '820px',
-              margin: '0 auto 2.5rem auto'
+              maxWidth: '840px',
+              margin: '0 auto 2.5rem auto',
+              textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
             }}
           >
             An institutional enterprise platform deployed at Akshaya College of Engineering and Technology, Kinathukadavu, Coimbatore, unifying students, sanitation personnel, and facilities administration with geo-located photographic logging, AI-assisted waste sorting, automated dispatching, and verifiable Before/After cleanup proof.
