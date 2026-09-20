@@ -1,136 +1,139 @@
 # Campus Wastage Monitoring System (CWMS)
-### Akshaya College of Engineering and Technology (ACET), Kinathukadavu, Coimbatore
+### **Akshaya College of Engineering and Technology**
+**Kinathukadavu, Coimbatore – 642109**  
+**Official College Website:** [www.acetcbe.edu.in](https://www.acetcbe.edu.in)
 
-An automated, intelligent end-to-end Smart Campus Wastage Monitoring and Resolution Platform designed to ensure zero waste pileup, rapid incident dispatch, and full accountability across college premises.
+---
+
+An automated, intelligent, institutional Smart Campus Wastage Monitoring and Remediation Platform designed for **Akshaya College of Engineering and Technology (ACET)**. CWMS unifies students, facilities administrators, and sanitation personnel with geo-located waste logging, AI-assisted waste sorting, automated dispatch telemetry, and verifiable Before/After cleanup proof.
+
+---
+
+## 🏛️ Institutional Metadata & Branding
+
+| Parameter | Details |
+| :--- | :--- |
+| **Project Name** | **Campus Wastage Monitoring System** |
+| **Institution** | **Akshaya College of Engineering and Technology** |
+| **Location** | Kinathukadavu, Coimbatore – 642109 |
+| **Website** | [www.acetcbe.edu.in](https://www.acetcbe.edu.in) |
+| **Browser Title** | `Campus Wastage Monitoring System \| Akshaya College of Engineering and Technology` |
+| **Branding Asset** | Official ACET Header Banner (`client/public/assets/images/college_banner.jpeg`) |
 
 ---
 
 ## 🌟 Key Features
 
-- **Role-Based Access Control**: Tailored portals for **Students/Staff**, **Cleaning Crew**, and **Chief Campus Administrators**.
-- **Visual Evidence & Incident Reporting**: Students submit location-tagged waste tickets with photo evidence and urgency levels.
-- **Interactive Campus GIS Map**: Real-time geospatial mapping of campus hotspots, buildings, and waste statuses.
-- **Cleaning Crew Dispatch & Task Lifecycle**:
-  - `REPORTED` &rarr; `ASSIGNED` &rarr; `ACKNOWLEDGED` &rarr; `IN_PROGRESS` &rarr; `RESOLVED`
-  - Photographic "After-Cleanup" resolution proof and waste weight (kg) tracking.
-- **Resilient Dual-Engine Database Architecture**:
-  - Automatically connects to MySQL if available.
-  - Seamlessly falls back to an in-memory Zero-Crash Embedded Database engine pre-seeded with 55 campus locations, 5 waste categories, and test user profiles.
-- **Admin Analytics & Insights**: Category distributions, location hotspot heatmaps, resolution metrics, and automated audit trails.
+- **Institutional Branding & Design**: Official ACET college header banner featured on the Landing Page, Login Screen, Student/Staff Dashboard, Admin Command Center, and Cleaning Staff Terminal.
+- **Role-Based Access Control (RBAC)**: Distinct, authenticated portals for **Students (`@acetcbe.edu.in`)**, **Cleaning Crew**, and **Facilities Administrators**.
+- **Visual Evidence & Waste Reporting**: Students upload waste incident photos with GPS location tagging, building/floor selection, category options, and urgency metrics.
+- **AI-Assisted Waste Sorting**: Automated waste category recommendations (Organic/Wet, Recyclable/Dry, E-Waste, Hazardous, Mixed Litter) based on image telemetry.
+- **Interactive Campus GIS Hotspot Map**: Real-time Leaflet map displaying 55 ACET campus locations, active waste tickets, and severity heatmaps.
+- **5-Stage Sanitation Workflow**:
+  $$\text{REPORTED} \longrightarrow \text{ASSIGNED} \longrightarrow \text{ACKNOWLEDGED} \longrightarrow \text{IN\_PROGRESS} \longrightarrow \text{RESOLVED}$$
+- **Photographic Resolution Proof**: Mandatory "After-Cleanup" photo evidence upload and waste weight (kg) tracking by cleaning personnel.
+- **Dual-Engine Resilient Database Architecture**:
+  - Connects to MySQL 8 production database.
+  - Seamlessly falls back to an in-memory Zero-Crash Embedded Database pre-seeded with 55 campus locations, 5 waste categories, and test user profiles.
+- **Admin Analytics Telemetry**: Live category breakdown charts, hotspot counts, resolution efficiency ratios, and emergency control desk dispatch.
 
 ---
 
-## 🏗️ Architecture & Technology Stack
+## 🏗️ Technology Stack
 
-| Tier | Technologies |
+| Component | Technologies |
 | :--- | :--- |
-| **Frontend** | React 18, Vite, React Router 6, Axios, Leaflet / React-Leaflet, Lucide Icons, Custom CSS Design System |
-| **Backend** | Node.js, Express 4, JWT Authentication, Multer (multipart photo uploads), CORS, Morgan |
-| **Database** | MySQL 8 / Resilient In-Memory Dual Engine with SQL Schema & Seed scripts |
-| **Security** | BCrypt password hashing, JWT Bearer tokens, Role-based middleware, Domain validation (`@acetcbe.edu.in`) |
+| **Frontend Framework** | React 18, Vite 5, React Router DOM 6, Axios |
+| **UI & Styling** | Vanilla CSS Tokens, Lucide Icons, Plus Jakarta Sans Typography |
+| **Mapping & GIS** | Leaflet 1.9, React-Leaflet |
+| **Backend API** | Node.js, Express 4, JWT Authentication, Multer Multipart Uploads |
+| **Database Tier** | MySQL 8 / In-Memory Dual Engine with SQL Schema & Seeds |
+| **Security & Auth** | BCrypt password encryption, JWT Bearer tokens, Domain restriction (`@acetcbe.edu.in`) |
 
 ---
 
-## 🚀 Quick Start (Local Setup)
+## 🔄 Project Workflow
+
+```mermaid
+flowchart TD
+    A["🎓 Student / User"] -->|1. Upload Waste Photo & Location| B["📝 Create Incident Report"]
+    B -->|2. AI Category Sorting| C["⚡ CWMS Backend API"]
+    C -->|3. Ticket Status: REPORTED| D["🛡️ Admin Command Center"]
+    D -->|4. Dispatch Staff & Assign Sector| E["🧹 Cleaning Crew Terminal"]
+    E -->|5. Acknowledge & Status: IN_PROGRESS| F["🧹 Clean Premises"]
+    F -->|6. Upload After-Cleanup Photo Proof & Weight| C
+    C -->|7. Ticket Status: RESOLVED| G["📊 Admin Analytics & Student Notification"]
+```
+
+---
+
+## 💻 Local Setup Instructions
 
 ### 1. Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or v20+ recommended)
-- [npm](https://npmjs.com/)
+- **Node.js** (v18 or v20+ recommended)
+- **npm** (v9+ recommended)
 
-### 2. Clone & Install Dependencies
+### 2. Clone Repository
 ```bash
-git clone https://github.com/<YOUR-USERNAME>/campus-wastage-monitoring-system.git
+git clone https://github.com/25ad017-afk/campus-wastage-monitoring-system.git
 cd campus-wastage-monitoring-system
+```
 
-# Install client dependencies
+### 3. Install Dependencies
+```bash
+# Install frontend client dependencies
 cd client
 npm install
 
-# Install server dependencies
+# Install backend server dependencies
 cd ../server
 npm install
 ```
 
-### 3. Environment Configuration
-
-Copy the sample environment files:
-
-#### Server (`server/.env`):
-```env
-PORT=5000
-NODE_ENV=development
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=
-DB_NAME=campus_waste_db
-DB_PORT=3306
-JWT_SECRET=super_secret_jwt_key_campus_waste_2026_change_in_production
-JWT_EXPIRES_IN=7d
-```
-
-#### Client (`client/.env`):
-```env
-VITE_API_URL=http://localhost:5000
-```
-
 ### 4. Running the Application
 
-In terminal 1 (Backend Server):
+#### Terminal 1 — Backend API Server (`port 5000`):
 ```bash
 cd server
 npm start
-# Server starts on http://localhost:5000
 ```
 
-In terminal 2 (Frontend Client):
+#### Terminal 2 — Frontend Development Server (`port 3000`):
 ```bash
 cd client
 npm run dev
-# Frontend runs on http://localhost:3000
 ```
 
 Open your browser at **`http://localhost:3000`**.
 
 ---
 
-## 👥 Demo / Testing Credentials
+## 🔑 Demo / Testing Accounts
 
-| Role | Email | Password | Access / Functionality |
+| Role | Email | Password | Access / Capabilities |
 | :--- | :--- | :--- | :--- |
-| **Campus Admin** | `admin@acetcbe.edu.in` | `Admin@123` | Full control: incident dispatch, staff assignment, analytics, live map |
-| **Cleaning Crew (North)** | `ramesh.staff@acetcbe.edu.in` | `Staff@123` | Task queue, acknowledge work, upload resolution photo & waste weight |
-| **Cleaning Crew (Central)** | `sunita.staff@acetcbe.edu.in` | `Staff@123` | Central campus zone tasks & resolution logs |
-| **Student (CSE)** | `priya.student@acetcbe.edu.in` | `Student@123` | Report waste, upload evidence, track personal ticket status |
+| **Campus Admin** | `admin@acetcbe.edu.in` | `Admin@123` | Command Center, Live GIS Map, Staff Assignment, Telemetry |
+| **Cleaning Staff** | `ramesh.staff@acetcbe.edu.in` | `Staff@123` | Assigned Tasks Queue, Accept Task, Upload After-Photo Proof |
+| **Student** | `priya.student@acetcbe.edu.in` | `Student@123` | Waste Incident Reporting, AI Classifier, Track Ticket Status |
 
 ---
 
-## 🧪 Automated End-to-End Test Simulation
+## ⚙️ Backend Requirements & Cloud Deployment
 
-Run the complete 4-workflow test suite (Registration &rarr; Reporting &rarr; Admin Dispatch &rarr; Staff Photographic Resolution &rarr; Analytics Verification):
+> **Important Deployment Note:**  
+> CWMS includes a full Node.js / Express REST API with file upload handlers (`Multer`), JWT authentication, and database state. Static-only hosts like GitHub Pages can only serve static HTML/CSS/JS. For full production deployment with backend API and image uploads, use one of the following methods:
 
-```bash
-cd server
-npm run test:e2e
-```
-
----
-
-## 🌐 Production Deployment Guide
-
-### Option 1: Full-Stack Single-Server (Render / Railway / VPS)
+### Unified Single-Server Deployment (Render / Railway / VPS / Cloudflare Tunnel)
 1. Build the frontend client:
    ```bash
    cd client
    npm run build
    ```
-2. The compiled assets will be in `client/dist`. The Express backend (`server/server.js`) automatically serves `client/dist` statically when present.
-3. Start the Node server with `npm start` in `server/`.
-
-### Option 2: Split Deployment (Vercel Frontend + Render/Railway Backend)
-- **Backend**: Deploy `server/` to Render/Railway. Set environment variables `PORT`, `JWT_SECRET`, `CLIENT_URL=https://your-frontend.vercel.app`.
-- **Frontend**: Deploy `client/` to Vercel/Netlify. Set environment variable `VITE_API_URL=https://your-backend-api.onrender.com`.
+2. The Express server (`server/server.js`) automatically serves the compiled frontend (`client/dist`) statically alongside the REST API (`/api`) and Uploads directory (`/uploads`).
+3. Launch Node backend: `npm start` in `server/`.
 
 ---
 
 ## 📄 License
-Academic and campus operational use for **Akshaya College of Engineering and Technology (ACET)**.
+Academic and operational platform for **Akshaya College of Engineering and Technology (ACET)**.
+
