@@ -6,5 +6,9 @@
   "workspaces": [
     "client",
     "server"
-  ]
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=client",
+    "start": "npm start --workspace=server"
+  }
 }

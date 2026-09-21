@@ -8,17 +8,21 @@ const fs = require('fs');
 // Load environment variables
 dotenv.config();
 
-// Ensure uploads directories exist
+// Ensure uploads directories exist (safe for serverless environments)
 const uploadDirs = [
   path.join(__dirname, 'uploads'),
   path.join(__dirname, 'uploads', 'reports'),
   path.join(__dirname, 'uploads', 'resolutions')
 ];
-uploadDirs.forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
+try {
+  uploadDirs.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  });
+} catch (err) {
+  // Read-only serverless filesystem fallback
+}
 
 // Import database connection (self-tests on load)
 require('./config/db');
@@ -116,13 +120,15 @@ app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`====================================================`);
-  console.log(`🚀 CWMS Backend Server running on port: ${PORT}`);
-  console.log(`📡 Health Check: http://localhost:${PORT}/api/health`);
-  console.log(`🔑 Auth Endpoint: http://localhost:${PORT}/api/auth`);
-  console.log(`📁 Uploads Directory: ${path.join(__dirname, 'uploads')}`);
-  console.log(`====================================================`);
-});
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`====================================================`);
+    console.log(`🚀 CWMS Backend Server running on port: ${PORT}`);
+    console.log(`📡 Health Check: http://localhost:${PORT}/api/health`);
+    console.log(`🔑 Auth Endpoint: http://localhost:${PORT}/api/auth`);
+    console.log(`📁 Uploads Directory: ${path.join(__dirname, 'uploads')}`);
+    console.log(`====================================================`);
+  });
+}
 
 module.exports = app;
