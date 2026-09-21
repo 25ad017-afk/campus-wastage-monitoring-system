@@ -16,4 +16,4 @@ Disallow: /register
 Disallow: /api/
 Disallow: /uploads/
 
-Sitemap: https://campus-wastage-monitoring-system-7rv2saguj-25ad017-afk.vercel.app/sitemap.xml
+Sitemap: https://campus-wastage-monitoring-system.vercel.app/sitemap.xml
