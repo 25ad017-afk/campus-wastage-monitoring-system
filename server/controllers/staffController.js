@@ -172,21 +172,42 @@ class StaffController {
       const task = await AssignmentModel.getTaskById(id, staff.staff_id);
       if (!task) {
         if (req.file.path && fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+          try { fs.unlinkSync(req.file.path); } catch (e) {}
         }
         return ApiResponse.error(res, 'Task not found or not assigned to you.', 404);
       }
 
       if (task.assignment_status === 'COMPLETED') {
         if (req.file.path && fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+          try { fs.unlinkSync(req.file.path); } catch (e) {}
         }
         return ApiResponse.error(res, 'This task has already been resolved.', 400);
       }
 
-      // 3. Process image metadata
-      const relativeImageUrl = `/uploads/resolutions/${req.file.filename}`;
-      const fileSizeKb = Math.round(req.file.size / 1024);
+      // 3. Process image metadata and store safely
+      const os = require('os');
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      const ext = (path.extname(req.file.originalname || '') || '.jpg').toLowerCase();
+      const filename = req.file.filename || `resolution-${uniqueSuffix}${ext}`;
+      let relativeImageUrl = `/uploads/resolutions/${filename}`;
+      const fileSizeKb = Math.round((req.file.size || (req.file.buffer ? req.file.buffer.length : 0)) / 1024) || 1;
+
+      if (req.file.buffer) {
+        try {
+          const isVercel = Boolean(process.env.VERCEL);
+          const targetDir = isVercel 
+            ? path.join(os.tmpdir(), 'cwms_uploads', 'resolutions')
+            : path.join(__dirname, '..', 'uploads', 'resolutions');
+
+          if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+          }
+          fs.writeFileSync(path.join(targetDir, filename), req.file.buffer);
+        } catch (saveErr) {
+          console.warn('⚠️ Serverless resolution disk write fallback to data URL:', saveErr.message);
+          relativeImageUrl = `data:${req.file.mimetype || 'image/jpeg'};base64,${req.file.buffer.toString('base64')}`;
+        }
+      }
 
       // 4. Execute atomic database completion
       const completed = await AssignmentModel.completeTask({
@@ -202,7 +223,7 @@ class StaffController {
 
       if (!completed) {
         if (req.file.path && fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+          try { fs.unlinkSync(req.file.path); } catch (e) {}
         }
         return ApiResponse.error(res, 'Failed to complete task in database.', 500);
       }
@@ -210,23 +231,27 @@ class StaffController {
       // 5. Fetch updated report details
       const resolvedReport = await ReportModel.findById(task.report_id);
 
-      // 6. Trigger notifications for task completion
-      if (resolvedReport && resolvedReport.reporter_id) {
-        NotificationModel.create({
-          recipientId: resolvedReport.reporter_id,
+      // 6. Trigger notifications for task completion safely
+      try {
+        if (resolvedReport && resolvedReport.reporter_id) {
+          NotificationModel.create({
+            recipientId: resolvedReport.reporter_id,
+            reportId: task.report_id,
+            title: 'Waste Cleared & Verified!',
+            message: `Your reported waste incident #${resolvedReport.ticket_code} at ${resolvedReport.building_name} has been cleaned with photo proof.`,
+            type: 'STATUS_UPDATE'
+          });
+        }
+
+        NotificationModel.createForAdmins({
           reportId: task.report_id,
-          title: 'Waste Cleared & Verified!',
-          message: `Your reported waste incident #${resolvedReport.ticket_code} at ${resolvedReport.building_name} has been cleaned with photo proof.`,
+          title: 'Cleanup Completed & Photo Uploaded',
+          message: `Ticket #${resolvedReport?.ticket_code} at ${resolvedReport?.building_name} was resolved by ${staff.full_name}.`,
           type: 'STATUS_UPDATE'
         });
+      } catch (notifErr) {
+        console.warn('Task completion notification non-critical error:', notifErr.message);
       }
-
-      NotificationModel.createForAdmins({
-        reportId: task.report_id,
-        title: 'Cleanup Completed & Photo Uploaded',
-        message: `Ticket #${resolvedReport?.ticket_code} at ${resolvedReport?.building_name} was resolved by ${staff.full_name}.`,
-        type: 'STATUS_UPDATE'
-      });
 
       return ApiResponse.success(res, 'Task completed successfully! Cleanup proof uploaded.', {
         assignmentId: id,
@@ -234,7 +259,7 @@ class StaffController {
       }, 200);
     } catch (error) {
       if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
+        try { fs.unlinkSync(req.file.path); } catch (e) {}
       }
       next(error);
     }

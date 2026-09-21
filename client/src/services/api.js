@@ -16,7 +16,7 @@ const api = axios.create({
  */
 export const getAssetUrl = (assetPath) => {
   if (!assetPath) return '';
-  if (assetPath.startsWith('http://') || assetPath.startsWith('https://')) {
+  if (assetPath.startsWith('http://') || assetPath.startsWith('https://') || assetPath.startsWith('data:')) {
     return assetPath;
   }
   return `${rawBaseUrl.replace(/\/+$/, '')}${assetPath.startsWith('/') ? '' : '/'}${assetPath}`;

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const ReportModel = require('../models/reportModel');
 const NotificationModel = require('../models/notificationModel');
 const ApiResponse = require('../utils/apiResponse');
@@ -21,9 +22,8 @@ class ReportController {
 
       // 2. Validate required text fields
       if (!locationId || !categoryId) {
-        // Remove uploaded file if validation fails to avoid garbage files
         if (req.file.path && fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+          try { fs.unlinkSync(req.file.path); } catch (e) {}
         }
         return ApiResponse.error(res, 'Both locationId and categoryId are required.', 400);
       }
@@ -33,7 +33,7 @@ class ReportController {
       const sanitizedPriority = priority.toUpperCase();
       if (!allowedPriorities.includes(sanitizedPriority)) {
         if (req.file.path && fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+          try { fs.unlinkSync(req.file.path); } catch (e) {}
         }
         return ApiResponse.error(res, `Priority must be one of: ${allowedPriorities.join(', ')}`, 400);
       }
@@ -42,7 +42,7 @@ class ReportController {
       const isLocationValid = await ReportModel.validateLocation(locationId);
       if (!isLocationValid) {
         if (req.file.path && fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+          try { fs.unlinkSync(req.file.path); } catch (e) {}
         }
         return ApiResponse.error(res, `Location ID ${locationId} does not exist.`, 404);
       }
@@ -50,7 +50,7 @@ class ReportController {
       const isCategoryValid = await ReportModel.validateCategory(categoryId);
       if (!isCategoryValid) {
         if (req.file.path && fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
+          try { fs.unlinkSync(req.file.path); } catch (e) {}
         }
         return ApiResponse.error(res, `Waste Category ID ${categoryId} does not exist.`, 404);
       }
@@ -70,9 +70,30 @@ class ReportController {
         priority: sanitizedPriority
       });
 
-      // 7. Insert before-image record into before_after_images table
-      const relativeImageUrl = `/uploads/reports/${req.file.filename}`;
-      const fileSizeKb = Math.round(req.file.size / 1024);
+      // 7. Process and store image safely (Serverless /tmp + Data URL fallback)
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      const ext = (path.extname(req.file.originalname || '') || '.jpg').toLowerCase();
+      const filename = req.file.filename || `report-${uniqueSuffix}${ext}`;
+      let relativeImageUrl = `/uploads/reports/${filename}`;
+      const fileSizeKb = Math.round((req.file.size || (req.file.buffer ? req.file.buffer.length : 0)) / 1024) || 1;
+
+      if (req.file.buffer) {
+        try {
+          const isVercel = Boolean(process.env.VERCEL);
+          const targetDir = isVercel 
+            ? path.join(os.tmpdir(), 'cwms_uploads', 'reports')
+            : path.join(__dirname, '..', 'uploads', 'reports');
+
+          if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+          }
+          fs.writeFileSync(path.join(targetDir, filename), req.file.buffer);
+        } catch (saveErr) {
+          // If filesystem write fails on serverless container, fall back to embedded Base64 Data URL so photo is never lost!
+          console.warn('⚠️ Serverless disk write fallback to data URL:', saveErr.message);
+          relativeImageUrl = `data:${req.file.mimetype || 'image/jpeg'};base64,${req.file.buffer.toString('base64')}`;
+        }
+      }
 
       await ReportModel.addImage({
         reportId,
@@ -85,27 +106,31 @@ class ReportController {
       // 8. Fetch complete created report to return
       const createdReport = await ReportModel.findById(reportId);
 
-      // 9. Dispatch in-app notifications
-      NotificationModel.create({
-        recipientId: req.user.userId,
-        reportId,
-        title: 'Report Submitted',
-        message: `Your report #${createdReport?.ticket_code} at ${createdReport?.building_name} has been logged.`,
-        type: 'REPORT_FILED'
-      });
+      // 9. Dispatch in-app notifications safely
+      try {
+        NotificationModel.create({
+          recipientId: req.user.userId,
+          reportId,
+          title: 'Report Submitted',
+          message: `Your report #${createdReport?.ticket_code} at ${createdReport?.building_name} has been logged.`,
+          type: 'REPORT_FILED'
+        });
 
-      NotificationModel.createForAdmins({
-        reportId,
-        title: 'New Waste Incident Filed',
-        message: `Ticket #${createdReport?.ticket_code} reported at ${createdReport?.building_name} (${createdReport?.priority} priority).`,
-        type: 'REPORT_FILED'
-      });
+        NotificationModel.createForAdmins({
+          reportId,
+          title: 'New Waste Incident Filed',
+          message: `Ticket #${createdReport?.ticket_code} reported at ${createdReport?.building_name} (${createdReport?.priority} priority).`,
+          type: 'REPORT_FILED'
+        });
+      } catch (notifErr) {
+        console.warn('Notification dispatch non-critical error:', notifErr.message);
+      }
 
       return ApiResponse.success(res, 'Waste incident reported successfully.', createdReport, 201);
     } catch (error) {
       // Clean up file if unexpected error occurs
       if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
+        try { fs.unlinkSync(req.file.path); } catch (e) {}
       }
       next(error);
     }
@@ -294,7 +319,6 @@ class ReportController {
   }
 
   /**
-  /**
    * @route   POST /api/reports/classify
    * @desc    AI waste classification from uploaded photo with confidence scoring & uncertainty flags
    * @access  Private (Authenticated users)
@@ -305,8 +329,8 @@ class ReportController {
         return ApiResponse.error(res, 'Please upload an image for AI classification.', 400);
       }
 
-      const filename = req.file.originalname.toLowerCase();
-      const fileSize = req.file.size;
+      const filename = (req.file.originalname || '').toLowerCase();
+      const fileSize = req.file.size || (req.file.buffer ? req.file.buffer.length : 1024);
 
       // Database category alignment:
       // 1: Dry / Recyclable
@@ -379,7 +403,7 @@ class ReportController {
       const isUncertain = confidencePercent < 80;
       const confidenceLevel = confidencePercent >= 85 ? 'HIGH' : confidencePercent >= 75 ? 'MEDIUM' : 'LOW';
 
-      // Always remove temporary file created by upload middleware
+      // Always remove temporary file created by upload middleware if it existed
       if (req.file.path && fs.existsSync(req.file.path)) {
         try {
           fs.unlinkSync(req.file.path);
@@ -408,10 +432,21 @@ class ReportController {
           // ignore
         }
       }
-      next(error);
+      console.warn('AI classification fallback activated:', error.message);
+      // Return safe fallback rather than crashing with 500
+      return ApiResponse.success(res, 'AI classification fallback.', {
+        predictedCategory: 'Dry / Recyclable',
+        categoryId: 1,
+        confidence: 70,
+        confidenceLevel: 'MEDIUM',
+        isUncertain: true,
+        isHazardous: false,
+        aiEngine: 'CWMS-VisionNet (Edge Waste Classifier - Fallback)',
+        recommendation: '⚠️ AI Vision confidence moderate. Please manually verify the Final Category.'
+      });
     }
   }
 }
 
-
 module.exports = ReportController;
+

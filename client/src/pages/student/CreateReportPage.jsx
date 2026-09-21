@@ -190,6 +190,7 @@ const CreateReportPage = () => {
   // Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
     setError('');
 
     if (!imageFile) {
