@@ -1,0 +1,19 @@
+# Robots.txt for Campus Wastage Monitoring System (CWMS) - ACET
+User-agent: *
+Allow: /$
+Allow: /assets/
+Allow: /campus_aerial.webp
+Allow: /college_banner.jpeg
+Allow: /sitemap.xml
+Allow: /robots.txt
+
+# Disallow private user portals, auth pages, and backend API endpoints
+Disallow: /student/
+Disallow: /admin/
+Disallow: /staff/
+Disallow: /login
+Disallow: /register
+Disallow: /api/
+Disallow: /uploads/
+
+Sitemap: https://campus-wastage-monitoring-system-7rv2saguj-25ad017-afk.vercel.app/sitemap.xml
