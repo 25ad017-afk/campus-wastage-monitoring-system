@@ -1,17 +1,54 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
-// Ensure destination directory exists
-const reportsUploadDir = path.join(__dirname, '..', 'uploads', 'reports');
-if (!fs.existsSync(reportsUploadDir)) {
-  fs.mkdirSync(reportsUploadDir, { recursive: true });
-}
+// Helper to determine writable upload folder (local vs serverless /tmp)
+const getUploadDir = (subdir = 'reports') => {
+  if (process.env.VERCEL) {
+    const tmpDir = path.join(os.tmpdir(), 'cwms_uploads', subdir);
+    if (!fs.existsSync(tmpDir)) {
+      try {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      } catch (e) {
+        // Ignore folder creation errors if already created concurrently
+      }
+    }
+    return tmpDir;
+  }
+
+  const localDir = path.join(__dirname, '..', 'uploads', subdir);
+  try {
+    if (!fs.existsSync(localDir)) {
+      fs.mkdirSync(localDir, { recursive: true });
+    }
+    // Verify write permissions
+    const testFile = path.join(localDir, `.write_test_${Date.now()}`);
+    fs.writeFileSync(testFile, '1');
+    fs.unlinkSync(testFile);
+    return localDir;
+  } catch (e) {
+    const tmpDir = path.join(os.tmpdir(), 'cwms_uploads', subdir);
+    if (!fs.existsSync(tmpDir)) {
+      try {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      } catch (err) {
+        // Ignore
+      }
+    }
+    return tmpDir;
+  }
+};
 
 // Storage engine configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, reportsUploadDir);
+    try {
+      const targetDir = getUploadDir('reports');
+      cb(null, targetDir);
+    } catch (err) {
+      cb(err);
+    }
   },
   filename: (req, file, cb) => {
     // Generate unique, collision-free filename: report-timestamp-random.ext
@@ -41,3 +78,4 @@ const upload = multer({
 });
 
 module.exports = upload;
+

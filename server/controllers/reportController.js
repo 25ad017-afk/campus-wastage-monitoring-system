@@ -240,16 +240,23 @@ class ReportController {
       }
 
       // Remove associated physical image files from disk
+      const os = require('os');
       if (report.images && report.images.length > 0) {
         report.images.forEach(img => {
-          const absolutePath = path.join(__dirname, '..', img.image_url);
-          if (fs.existsSync(absolutePath)) {
-            try {
-              fs.unlinkSync(absolutePath);
-            } catch (err) {
-              console.warn(`Could not delete file ${absolutePath}:`, err.message);
+          const cleanSubpath = (img.image_url || '').replace(/^\/uploads\//, '');
+          const possiblePaths = [
+            path.join(__dirname, '..', img.image_url),
+            path.join(os.tmpdir(), 'cwms_uploads', cleanSubpath)
+          ];
+          possiblePaths.forEach(filePath => {
+            if (fs.existsSync(filePath)) {
+              try {
+                fs.unlinkSync(filePath);
+              } catch (err) {
+                console.warn(`Could not delete file ${filePath}:`, err.message);
+              }
             }
-          }
+          });
         });
       }
 

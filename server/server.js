@@ -8,14 +8,31 @@ const fs = require('fs');
 // Load environment variables
 dotenv.config();
 
-// Ensure uploads directories exist (safe for serverless environments)
-const uploadDirs = [
+const os = require('os');
+
+// Ensure uploads directories exist (safe for local & serverless environments)
+const tmpUploadDirs = [
+  path.join(os.tmpdir(), 'cwms_uploads'),
+  path.join(os.tmpdir(), 'cwms_uploads', 'reports'),
+  path.join(os.tmpdir(), 'cwms_uploads', 'resolutions')
+];
+try {
+  tmpUploadDirs.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  });
+} catch (err) {
+  // Ignore
+}
+
+const localUploadDirs = [
   path.join(__dirname, 'uploads'),
   path.join(__dirname, 'uploads', 'reports'),
   path.join(__dirname, 'uploads', 'resolutions')
 ];
 try {
-  uploadDirs.forEach(dir => {
+  localUploadDirs.forEach(dir => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -74,7 +91,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// Serve uploaded images statically
+// Serve uploaded images statically (serving from both serverless temporary directory and bundled assets)
+app.use('/uploads', express.static(path.join(os.tmpdir(), 'cwms_uploads')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check endpoint
