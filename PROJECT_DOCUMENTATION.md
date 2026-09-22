@@ -6,8 +6,8 @@
 ### Academic Project Report
 **Institution:** AKSHAYA COLLEGE OF ENGINEERING AND TECHNOLOGY  
 **Location:** Kinathukadavu, Coimbatore – 642 109, Tamil Nadu  
-**Department:** Department of Computer Science and Engineering  
-**Course:** Bachelor of Engineering / Bachelor of Technology (Computer Science & Engineering / Information Technology)  
+**Department:** AI & DS (Artificial Intelligence and Data Science)  
+**Course:** Bachelor of Engineering / Bachelor of Technology (AI & DS (Artificial Intelligence and Data Science) / Information Technology)  
 **Academic Year:** 2025–2026  
 **Level:** 3rd Year Mini-Project / Capstone Project Phase-I  
 

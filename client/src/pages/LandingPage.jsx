@@ -364,7 +364,7 @@ const LandingPage = () => {
                 </div>
                 <div style={{ background: 'rgba(255, 255, 255, 0.08)', padding: '0.6rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                   <span style={{ fontSize: '0.72rem', color: 'var(--slate-400)', display: 'block', textTransform: 'uppercase', fontWeight: 700 }}>Department</span>
-                  <strong style={{ fontSize: '0.88rem', color: '#ffffff' }}>Computer Science &amp; Engineering</strong>
+                  <strong style={{ fontSize: '0.88rem', color: '#ffffff' }}>AI &amp; DS (Artificial Intelligence and Data Science)</strong>
                 </div>
               </div>
             </div>

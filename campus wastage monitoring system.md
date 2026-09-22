@@ -4,7 +4,7 @@
 ---
 
 ### Academic Project Report
-**Course:** Bachelor of Engineering / Bachelor of Technology (Computer Science & Engineering / Information Technology)  
+**Course:** Bachelor of Engineering / Bachelor of Technology (AI & DS (Artificial Intelligence and Data Science) / Information Technology)  
 **Academic Year:** 2025–2026  
 **Level:** 3rd Year Mini-Project / Capstone Project Phase-I  
 
