@@ -18,6 +18,21 @@ async function testAiWasteClassification() {
   console.log(`${colors.bright}${colors.cyan}  AI WASTE CLASSIFICATION MODULE - VERIFICATION TEST SUITE${colors.reset}`);
   console.log(`${colors.bright}${colors.cyan}================================================================${colors.reset}\n`);
 
+  // 0. Health check / Auto boot
+  let isRunning = false;
+  try {
+    const check = await fetch(`${BASE_URL}/api/health`);
+    if (check.ok) isRunning = true;
+  } catch (e) {
+    isRunning = false;
+  }
+
+  if (!isRunning) {
+    console.log('Booting backend instance on port 5000...');
+    require('../server');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+  }
+
   // Step 1: Authenticate Student
   console.log('1. Authenticating student...');
   const loginRes = await fetch(`${BASE_URL}/api/auth/login`, {

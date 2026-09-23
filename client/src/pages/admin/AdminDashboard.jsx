@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 import { getAssetUrl } from '../../services/api';
 import CampusMap from '../../components/admin/CampusMap';
+import SmtpSettingsModal from '../../components/admin/SmtpSettingsModal';
 import StatusBadge from '../../components/common/StatusBadge';
 import Loader from '../../components/common/Loader';
 import {
@@ -21,32 +22,42 @@ import {
   TrendingUp,
   Layers,
   HardHat,
-  PhoneCall
+  PhoneCall,
+  Mail,
+  Settings,
+  KeyRound,
+  ShieldCheck,
+  Server
 } from 'lucide-react';
 
 const AdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [analyticsData, setAnalyticsData] = useState(null);
+  const [smtpStatus, setSmtpStatus] = useState(null);
+  const [smtpModalOpen, setSmtpModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        const [dashRes, analyticsRes] = await Promise.all([
-          adminService.getDashboard(),
-          adminService.getAnalytics()
-        ]);
+  const fetchAllData = async () => {
+    try {
+      const [dashRes, analyticsRes, smtpRes] = await Promise.all([
+        adminService.getDashboard(),
+        adminService.getAnalytics(),
+        adminService.getSmtpStatus().catch(() => ({ data: null }))
+      ]);
 
-        if (dashRes.data) setDashboardData(dashRes.data);
-        if (analyticsRes.data) setAnalyticsData(analyticsRes.data);
-      } catch (err) {
-        console.error('Failed to load admin dashboard data:', err);
-        setError('Unable to fetch live admin statistics. Please check backend connection.');
-      } finally {
-        setLoading(false);
-      }
-    };
+      if (dashRes.data) setDashboardData(dashRes.data);
+      if (analyticsRes.data) setAnalyticsData(analyticsRes.data);
+      if (smtpRes?.data) setSmtpStatus(smtpRes.data);
+    } catch (err) {
+      console.error('Failed to load admin dashboard data:', err);
+      setError('Unable to fetch live admin statistics. Please check backend connection.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAllData();
   }, []);
 
@@ -271,6 +282,174 @@ const AdminDashboard = () => {
         </div>
       )}
 
+      {/* Institutional Email Gateway & SMTP Configuration Section */}
+      <div
+        className="card"
+        style={{
+          marginBottom: '2.5rem',
+          background: smtpStatus?.status === 'Configured'
+            ? 'linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)'
+            : 'linear-gradient(135deg, #ffffff 0%, #fffbeb 100%)',
+          border: smtpStatus?.status === 'Configured' ? '1px solid #bbf7d0' : '1px solid #fde68a',
+          boxShadow: 'var(--shadow-sm)'
+        }}
+      >
+        <div
+          style={{
+            padding: '1.25rem 1.5rem',
+            borderBottom: '1px solid var(--border-color)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div
+              style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '10px',
+                background: smtpStatus?.status === 'Configured' ? '#dcfce7' : '#fef3c7',
+                color: smtpStatus?.status === 'Configured' ? '#166534' : '#92400e',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}
+            >
+              <Mail size={22} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--slate-900)' }}>
+                  Institutional Email Gateway (Nodemailer SMTP)
+                </h2>
+                {smtpStatus?.status === 'Configured' ? (
+                  <span
+                    style={{
+                      background: '#ecfdf5',
+                      color: '#065f46',
+                      border: '1px solid #a7f3d0',
+                      padding: '0.2rem 0.65rem',
+                      borderRadius: '14px',
+                      fontWeight: 700,
+                      fontSize: '0.78rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem'
+                    }}
+                  >
+                    <CheckCircle2 size={13} color="#059669" /> SMTP Status: Configured
+                  </span>
+                ) : (
+                  <span
+                    style={{
+                      background: '#fef3c7',
+                      color: '#92400e',
+                      border: '1px solid #fde68a',
+                      padding: '0.2rem 0.65rem',
+                      borderRadius: '14px',
+                      fontWeight: 700,
+                      fontSize: '0.78rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem'
+                    }}
+                  >
+                    <AlertOctagon size={13} color="#d97706" /> SMTP Status: Not Configured
+                  </span>
+                )}
+              </div>
+              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: 'var(--slate-600)' }}>
+                Automated 6-digit OTP verification dispatch to student and staff college inboxes (@acetcbe.edu.in)
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setSmtpModalOpen(true)}
+            className="btn btn-primary btn-sm"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <KeyRound size={14} /> Configure SMTP Credentials
+          </button>
+        </div>
+
+        <div style={{ padding: '1.25rem 1.5rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '1rem',
+              fontSize: '0.84rem'
+            }}
+          >
+            <div style={{ background: '#ffffff', padding: '0.85rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '0.74rem', color: 'var(--slate-500)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                SMTP Server Host
+              </div>
+              <div style={{ fontWeight: 700, color: 'var(--slate-900)', marginTop: '0.25rem', fontFamily: 'var(--font-mono)' }}>
+                {smtpStatus?.host || 'smtp.gmail.com'}:{smtpStatus?.port || 587} {smtpStatus?.secure ? '(SSL 465)' : '(TLS 587)'}
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffff', padding: '0.85rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '0.74rem', color: 'var(--slate-500)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Active Sender Account
+              </div>
+              <div style={{ fontWeight: 700, color: 'var(--slate-900)', marginTop: '0.25rem' }}>
+                {smtpStatus?.senderAccount || 'Not configured'}
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffff', padding: '0.85rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '0.74rem', color: 'var(--slate-500)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Authorized Domain Policy
+              </div>
+              <div style={{ fontWeight: 700, color: 'var(--slate-900)', marginTop: '0.25rem' }}>
+                Student: {smtpStatus?.studentDomain || '@acetcbe.edu.in'} &bull; Staff: {smtpStatus?.staffDomain || '@acetcbe.edu.in'}
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffff', padding: '0.85rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '0.74rem', color: 'var(--slate-500)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Delivery Engine
+              </div>
+              <div style={{ fontWeight: 700, color: smtpStatus?.status === 'Configured' ? '#065f46' : '#92400e', marginTop: '0.25rem' }}>
+                {smtpStatus?.status === 'Configured'
+                  ? 'Live Nodemailer Gmail Transport'
+                  : 'Safe Development Mode (Zero Crash)'}
+              </div>
+            </div>
+          </div>
+
+          {smtpStatus?.status !== 'Configured' && (
+            <div
+              style={{
+                marginTop: '1rem',
+                padding: '0.75rem 1rem',
+                background: 'rgba(254, 243, 199, 0.6)',
+                border: '1px dashed #f59e0b',
+                borderRadius: '8px',
+                fontSize: '0.80rem',
+                color: '#78350f',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem'
+              }}
+            >
+              <ShieldCheck size={18} color="#d97706" style={{ flexShrink: 0 }} />
+              <div>
+                <strong>Safe Development Mode Active:</strong> SMTP credentials are not configured in <code>server/.env</code>. OTPs are securely logged to the backend console for local evaluation without risking password exposure. Real live email delivery will automatically activate as soon as valid Gmail App Password credentials are supplied above.
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Interactive GIS Campus Map (Embedded View) */}
       <div style={{ marginBottom: '2.5rem' }}>
         <CampusMap embedded={true} />
@@ -491,6 +670,14 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Secure SMTP Gateway Configuration Modal */}
+      <SmtpSettingsModal
+        isOpen={smtpModalOpen}
+        onClose={() => setSmtpModalOpen(false)}
+        currentStatus={smtpStatus}
+        onConfigSaved={() => fetchAllData()}
+      />
     </div>
   );
 };

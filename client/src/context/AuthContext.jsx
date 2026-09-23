@@ -26,9 +26,9 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // Login handler
-  const login = async (email, password) => {
-    const result = await authService.login(email, password);
+  // Login handler with role support
+  const login = async (email, password, role = 'STUDENT', otp = '') => {
+    const result = await authService.login(email, password, role, otp);
     if (result.success && result.data) {
       const { user: userData, token: jwtToken } = result.data;
       setUser(userData);

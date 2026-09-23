@@ -1,44 +1,165 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/authService';
 import {
   LogIn,
   AlertCircle,
+  CheckCircle2,
   Sparkles,
   Mail,
   Lock,
   GraduationCap,
   HardHat,
   ShieldCheck,
-  ArrowRight
+  ArrowRight,
+  KeyRound,
+  RefreshCw,
+  Send,
+  Check,
+  Building2,
+  Info,
+  Radio
 } from 'lucide-react';
 import DemoModeModal from '../../components/common/DemoModeModal';
 
 const LoginPage = () => {
+  const [activeRole, setActiveRole] = useState('STUDENT'); // 'STUDENT' or 'STAFF'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [statusMessage, setStatusMessage] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [demoModalOpen, setDemoModalOpen] = useState(false);
+  const [emailStatus, setEmailStatus] = useState(null);
+
+  // Load backend email service status
+  useEffect(() => {
+    const fetchEmailStatus = async () => {
+      try {
+        const res = await authService.getEmailStatus();
+        if (res.data) {
+          setEmailStatus(res.data);
+        }
+      } catch (e) {}
+    };
+    fetchEmailStatus();
+  }, []);
+
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // Cooldown timer countdown
+  useEffect(() => {
+    let timer;
+    if (cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  // Reset form state when switching tabs
+  const handleRoleTabChange = (newRole) => {
+    setActiveRole(newRole);
+    setEmail('');
+    setPassword('');
+    setOtp('');
+    setIsOtpSent(false);
+    setIsOtpVerified(false);
+    setError('');
+    setStatusMessage(null);
+  };
+
+  // 1. Send Verification Code (OTP)
+  const handleSendOtp = async () => {
+    setError('');
+    setStatusMessage(null);
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setError('Please enter your college email address first.');
+      return;
+    }
+
+    if (!normalizedEmail.endsWith('@acetcbe.edu.in')) {
+      setError('Please use your official ACET college email address (@acetcbe.edu.in).');
+      return;
+    }
+
+    setSendingOtp(true);
+    try {
+      const res = await authService.sendOtp(normalizedEmail, activeRole);
+      setIsOtpSent(true);
+      setCooldown(res.data?.cooldownSeconds || 60);
+      setStatusMessage({
+        type: 'success',
+        text: res.message || 'Verification code sent successfully to your official college email.'
+      });
+    } catch (err) {
+      const errText = err.response?.data?.message || err.message || 'Failed to send verification code.';
+      setError(errText);
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  // 2. Verify 6-digit OTP
+  const handleVerifyOtp = async () => {
+    setError('');
+    setStatusMessage(null);
+
+    if (!otp || otp.trim().length !== 6) {
+      setError('Please enter the 6-digit verification code.');
+      return;
+    }
+
+    setVerifyingOtp(true);
+    try {
+      const res = await authService.verifyOtp(email.trim().toLowerCase(), otp.trim(), activeRole);
+      setIsOtpVerified(true);
+      setStatusMessage({ type: 'success', text: 'Email verified successfully! You may now sign in.' });
+    } catch (err) {
+      const errText = err.response?.data?.message || err.message || 'Invalid verification code.';
+      setError(errText);
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  // 3. Complete Sign In
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setStatusMessage(null);
 
-    // Frontend domain restriction check (case-insensitive)
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail.endsWith('@acetcbe.edu.in')) {
-      setError('Please use your official ACET college email address.');
+      setError('Please use your official ACET college email address (@acetcbe.edu.in).');
+      return;
+    }
+
+    if (!otp || otp.trim().length !== 6) {
+      if (!isOtpSent) {
+        setError('Mandatory OTP Verification: Please click "Send Code" to receive your 6-digit verification code on your college email.');
+      } else {
+        setError('Mandatory OTP Verification: Please enter the 6-digit verification code sent to your official college email.');
+      }
       return;
     }
 
     setLoading(true);
 
     try {
-      const user = await login(normalizedEmail, password);
+      const user = await login(normalizedEmail, password, activeRole, otp.trim());
       if (user.role === 'ADMIN') {
         navigate('/admin/dashboard');
       } else if (user.role === 'STAFF') {
@@ -53,17 +174,25 @@ const LoginPage = () => {
     }
   };
 
-  const handleQuickFill = (demoEmail, demoPassword) => {
+  const handleQuickFill = (demoEmail, demoPassword, role) => {
+    setActiveRole(role === 'ADMIN' ? 'STAFF' : role);
     setEmail(demoEmail);
     setPassword(demoPassword);
+    setOtp('');
+    setIsOtpSent(false);
+    setIsOtpVerified(false);
     setError('');
+    setStatusMessage({
+      type: 'success',
+      text: `Loaded credentials for ${demoEmail}. Click "Send Code" to receive your verification code on your college email.`
+    });
   };
 
   return (
-    <div className="container animate-fade-in" style={{ maxWidth: '480px', marginTop: '3rem', marginBottom: '4rem' }}>
+    <div className="container animate-fade-in" style={{ maxWidth: '520px', marginTop: '2.5rem', marginBottom: '4rem' }}>
       <div className="card" style={{ padding: '2.5rem 2rem' }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           {/* College Branding Banner */}
           <div
             style={{
@@ -73,7 +202,7 @@ const LoginPage = () => {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: '1rem',
+              marginBottom: '0.8rem',
               border: '1px solid var(--border-color)',
               maxWidth: '100%'
             }}
@@ -82,7 +211,7 @@ const LoginPage = () => {
               src="/assets/images/college_banner.jpeg"
               alt="Akshaya College of Engineering and Technology"
               style={{
-                maxHeight: '48px',
+                maxHeight: '44px',
                 maxWidth: '100%',
                 width: 'auto',
                 height: 'auto',
@@ -105,56 +234,251 @@ const LoginPage = () => {
               fontSize: '0.72rem',
               fontWeight: 700,
               letterSpacing: '0.03em',
-              marginBottom: '0.6rem'
+              marginBottom: '0.5rem'
             }}
           >
             🏛️ AKSHAYA COLLEGE OF ENGINEERING AND TECHNOLOGY
           </div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '0.2rem' }}>
-            Welcome Back
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '0.2rem', color: 'var(--slate-900)' }}>
+            Campus Portal Sign In
           </h1>
-          <p style={{ color: 'var(--slate-500)', fontSize: '0.86rem', marginTop: '0.25rem' }}>
-            Kinathukadavu, Coimbatore &bull; Campus Portal Sign In
+          <p style={{ color: 'var(--slate-500)', fontSize: '0.82rem', marginTop: '0.15rem' }}>
+            Pollachi &bull; Kinathukadavu, Coimbatore &bull; CWMS Security
           </p>
+          {/* Email Service Mode Indicator Badge */}
+          {emailStatus && (
+            <div style={{ marginTop: '0.6rem' }}>
+              {emailStatus.isConfigured ? (
+                <span style={{ fontSize: '0.70rem', background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46', padding: '0.15rem 0.5rem', borderRadius: '12px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <Radio size={11} color="#059669" /> SMTP Real Email Active ({emailStatus.host})
+                </span>
+              ) : (
+                <span
+                  style={{ fontSize: '0.70rem', background: '#fef3c7', border: '1px solid #fde68a', color: '#92400e', padding: '0.15rem 0.5rem', borderRadius: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                  title="To send real emails to inboxes, set EMAIL_USER and EMAIL_PASSWORD in server/.env"
+                >
+                  <Info size={11} /> Safe Dev Mode (OTP logged to backend terminal)
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ROLE SELECTION TABS */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '0.5rem',
+            background: 'var(--slate-100)',
+            padding: '0.35rem',
+            borderRadius: 'var(--radius-md)',
+            marginBottom: '1.5rem'
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => handleRoleTabChange('STUDENT')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              padding: '0.65rem 0.5rem',
+              borderRadius: 'var(--radius-sm)',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '0.88rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              background: activeRole === 'STUDENT' ? '#ffffff' : 'transparent',
+              color: activeRole === 'STUDENT' ? 'var(--primary-700)' : 'var(--slate-600)',
+              boxShadow: activeRole === 'STUDENT' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'
+            }}
+          >
+            <GraduationCap size={18} />
+            <span>Student Login</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleRoleTabChange('STAFF')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              padding: '0.65rem 0.5rem',
+              borderRadius: 'var(--radius-sm)',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '0.88rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              background: activeRole === 'STAFF' ? '#ffffff' : 'transparent',
+              color: activeRole === 'STAFF' ? '#d97706' : 'var(--slate-600)',
+              boxShadow: activeRole === 'STAFF' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'
+            }}
+          >
+            <HardHat size={18} />
+            <span>Staff Login</span>
+          </button>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="alert-box alert-error">
+          <div className="alert-box alert-error" style={{ marginBottom: '1.25rem' }}>
             <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
             <span>{error}</span>
           </div>
         )}
 
-        {/* Form */}
+        {/* Status Alert */}
+        {statusMessage && (
+          <div className="alert-box alert-success" style={{ marginBottom: '1.25rem' }}>
+            <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+            <span>{statusMessage.text}</span>
+          </div>
+        )}
+
+        {/* Authentication Form */}
         <form onSubmit={handleSubmit}>
+          {/* Email Field */}
           <div className="form-group">
             <label className="form-label" htmlFor="email">
-              Campus Email Address
+              {activeRole === 'STUDENT' ? 'Official Student Email Address' : 'Official Staff / Faculty Email Address'}
             </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                id="email"
-                type="email"
-                className="input-field"
-                placeholder="e.g. priya.student@acetcbe.edu.in"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={{ paddingLeft: '2.4rem' }}
-              />
-              <Mail
-                size={16}
-                color="var(--slate-400)"
-                style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }}
-              />
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <input
+                  id="email"
+                  type="email"
+                  className="input-field"
+                  placeholder={activeRole === 'STUDENT' ? 'priya.student@acetcbe.edu.in' : 'ramesh.staff@acetcbe.edu.in'}
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setIsOtpVerified(false);
+                  }}
+                  required
+                  style={{ paddingLeft: '2.4rem' }}
+                />
+                <Mail
+                  size={16}
+                  color="var(--slate-400)"
+                  style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }}
+                />
+              </div>
+
+              {/* Send Verification Code Button */}
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={sendingOtp || cooldown > 0}
+                className="btn btn-secondary btn-sm"
+                style={{
+                  whiteSpace: 'nowrap',
+                  fontSize: '0.78rem',
+                  padding: '0 0.85rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  fontWeight: 600
+                }}
+              >
+                {sendingOtp ? (
+                  <>
+                    <RefreshCw size={13} className="animate-spin" /> Sending...
+                  </>
+                ) : cooldown > 0 ? (
+                  <>Resend ({cooldown}s)</>
+                ) : (
+                  <>
+                    <Send size={13} /> Send Code
+                  </>
+                )}
+              </button>
             </div>
-            <div className="form-hint">Accepted official domain: @acetcbe.edu.in</div>
+            <div className="form-hint">
+              {activeRole === 'STUDENT' 
+                ? 'Authorized college student domain: @acetcbe.edu.in' 
+                : 'Authorized college staff & faculty domain: @acetcbe.edu.in'}
+            </div>
           </div>
 
+          {/* OTP Verification Flow Section */}
+          {isOtpSent && (
+            <div
+              style={{
+                background: 'var(--slate-50)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-md)',
+                padding: '1rem',
+                marginBottom: '1.25rem'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <label className="form-label" style={{ margin: 0, fontSize: '0.82rem' }} htmlFor="otp">
+                  Enter 6-Digit Verification Code
+                </label>
+                {isOtpVerified && (
+                  <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                    <Check size={14} /> Code Verified
+                  </span>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    id="otp"
+                    type="text"
+                    maxLength={6}
+                    className="input-field"
+                    placeholder="Enter 6-digit OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                    style={{
+                      paddingLeft: '2.4rem',
+                      letterSpacing: '0.2em',
+                      fontWeight: 700,
+                      fontFamily: 'monospace'
+                    }}
+                  />
+                  <KeyRound
+                    size={16}
+                    color="var(--slate-400)"
+                    style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleVerifyOtp}
+                  disabled={verifyingOtp || isOtpVerified || otp.length !== 6}
+                  className="btn btn-primary btn-sm"
+                  style={{
+                    whiteSpace: 'nowrap',
+                    fontSize: '0.78rem',
+                    padding: '0 0.85rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem'
+                  }}
+                >
+                  {verifyingOtp ? 'Verifying...' : isOtpVerified ? 'Verified' : 'Verify Code'}
+                </button>
+              </div>
+              <p style={{ margin: '0.4rem 0 0 0', fontSize: '0.72rem', color: 'var(--slate-500)' }}>
+                Verification code valid for 10 minutes.
+              </p>
+            </div>
+          )}
+
+          {/* Password Field */}
           <div className="form-group">
             <label className="form-label" htmlFor="password">
-              Password
+              Security Password
             </label>
             <div style={{ position: 'relative' }}>
               <input
@@ -178,16 +502,28 @@ const LoginPage = () => {
           <button
             type="submit"
             className="btn btn-primary"
-            style={{ width: '100%', marginTop: '0.5rem' }}
+            style={{
+              width: '100%',
+              marginTop: '0.75rem',
+              padding: '0.75rem 1rem',
+              fontSize: '0.95rem',
+              background: activeRole === 'STAFF' ? 'linear-gradient(135deg, #d97706 0%, #b45309 100%)' : undefined
+            }}
             disabled={loading}
           >
-            {loading ? 'Validating Credentials...' : 'Sign In to Campus Console'}
+            {loading ? (
+              'Validating Credentials...'
+            ) : (
+              <>
+                <LogIn size={18} /> Sign In as {activeRole === 'STUDENT' ? 'Student' : 'Staff Member'}
+              </>
+            )}
           </button>
         </form>
 
-        {/* Evaluator / Viva Demonstration Quick Fill */}
-        <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px dashed var(--border-color)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--slate-600)', fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.04em' }}>
+        {/* Quick Demo Fill Buttons for Viva Examination */}
+        <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px dashed var(--border-color)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--slate-600)', fontSize: '0.76rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.65rem', letterSpacing: '0.04em' }}>
             <Sparkles size={14} color="var(--primary-600)" />
             <span>Viva Evaluator Quick-Access:</span>
           </div>
@@ -195,7 +531,7 @@ const LoginPage = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.4rem' }}>
             <button
               type="button"
-              onClick={() => handleQuickFill('priya.student@acetcbe.edu.in', 'Student@123')}
+              onClick={() => handleQuickFill('priya.student@acetcbe.edu.in', 'Student@123', 'STUDENT')}
               className="btn btn-secondary btn-sm"
               style={{ fontSize: '0.72rem', padding: '0.35rem 0.2rem', flexDirection: 'column', gap: '0.2rem' }}
               title="Student (Priya - CSE)"
@@ -206,29 +542,29 @@ const LoginPage = () => {
 
             <button
               type="button"
-              onClick={() => handleQuickFill('ramesh.staff@acetcbe.edu.in', 'Staff@123')}
+              onClick={() => handleQuickFill('ramesh.staff@acetcbe.edu.in', 'Staff@123', 'STAFF')}
               className="btn btn-secondary btn-sm"
               style={{ fontSize: '0.72rem', padding: '0.35rem 0.2rem', flexDirection: 'column', gap: '0.2rem' }}
-              title="Cleaning Crew (North Zone)"
+              title="Cleaning Crew (Academic Area)"
             >
               <HardHat size={15} color="#d97706" />
-              <span>Staff (North)</span>
+              <span>Staff (Ramesh)</span>
             </button>
 
             <button
               type="button"
-              onClick={() => handleQuickFill('sunita.staff@acetcbe.edu.in', 'Staff@123')}
+              onClick={() => handleQuickFill('sunita.staff@acetcbe.edu.in', 'Staff@123', 'STAFF')}
               className="btn btn-secondary btn-sm"
               style={{ fontSize: '0.72rem', padding: '0.35rem 0.2rem', flexDirection: 'column', gap: '0.2rem' }}
-              title="Cleaning Crew (Central Zone)"
+              title="Cleaning Crew (Food Court Area)"
             >
               <HardHat size={15} color="#0284c7" />
-              <span>Staff (Central)</span>
+              <span>Staff (Sunita)</span>
             </button>
 
             <button
               type="button"
-              onClick={() => handleQuickFill('admin@acetcbe.edu.in', 'Admin@123')}
+              onClick={() => handleQuickFill('admin@acetcbe.edu.in', 'Admin@123', 'ADMIN')}
               className="btn btn-secondary btn-sm"
               style={{ fontSize: '0.72rem', padding: '0.35rem 0.2rem', flexDirection: 'column', gap: '0.2rem' }}
               title="Chief Administrator"
@@ -255,17 +591,26 @@ const LoginPage = () => {
                 textDecoration: 'underline'
               }}
             >
-              🎓 Open Demo Mode Controls (Load / Reset Data)
+              ⚙️ Open Demo Mode Controls (Load / Reset Data)
             </button>
           </div>
         </div>
 
         {/* Footer Link */}
         <div style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.85rem', color: 'var(--slate-500)' }}>
-          New student on campus?{' '}
-          <Link to="/register" style={{ fontWeight: 700, color: 'var(--primary-600)' }}>
-            Create Student Account
-          </Link>
+          {activeRole === 'STUDENT' ? (
+            <>
+              New student on campus?{' '}
+              <Link to="/register" style={{ fontWeight: 700, color: 'var(--primary-600)' }}>
+                Register Student Account
+              </Link>
+            </>
+          ) : (
+            <>
+              Need staff onboarding credentials? Contact{' '}
+              <span style={{ fontWeight: 600, color: 'var(--slate-700)' }}>Admin Office</span>
+            </>
+          )}
         </div>
       </div>
 

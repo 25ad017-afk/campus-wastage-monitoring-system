@@ -5,9 +5,12 @@ const verifyToken = require('../middleware/authMiddleware');
 const authorizeRoles = require('../middleware/roleMiddleware');
 const ApiResponse = require('../utils/apiResponse');
 
-// Public Authentication Routes
+// Public Authentication & Email Verification Routes
+router.post('/send-otp', AuthController.sendOtp);
+router.post('/verify-otp', AuthController.verifyOtp);
 router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
+router.get('/email-status', AuthController.getEmailStatus);
 
 // Protected Routes (Requires JWT)
 router.get('/me', verifyToken, AuthController.getMe);

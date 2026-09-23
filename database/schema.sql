@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS users (
   role ENUM('STUDENT', 'STAFF', 'ADMIN') NOT NULL DEFAULT 'STUDENT',
   phone_number VARCHAR(15) NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  is_email_verified BOOLEAN NOT NULL DEFAULT TRUE,
+  email_verified_at DATETIME NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_users_role (role),
@@ -138,4 +140,18 @@ CREATE TABLE IF NOT EXISTS notifications (
   CONSTRAINT fk_notif_recipient FOREIGN KEY (recipient_id) REFERENCES users(user_id) ON DELETE CASCADE,
   CONSTRAINT fk_notif_report FOREIGN KEY (report_id) REFERENCES waste_reports(report_id) ON DELETE SET NULL,
   INDEX idx_notif_user_unread (recipient_id, is_read)
+) ENGINE=InnoDB;
+
+-- 10. EMAIL OTP VERIFICATIONS TABLE
+CREATE TABLE IF NOT EXISTS email_verifications (
+  verification_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(150) NOT NULL,
+  otp_hash VARCHAR(64) NOT NULL,
+  role ENUM('STUDENT', 'STAFF', 'ADMIN') NOT NULL DEFAULT 'STUDENT',
+  attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  max_attempts TINYINT UNSIGNED NOT NULL DEFAULT 5,
+  is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+  expires_at DATETIME NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_email_verif (email, role, is_verified)
 ) ENGINE=InnoDB;

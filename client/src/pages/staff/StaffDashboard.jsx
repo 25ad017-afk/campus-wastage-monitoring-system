@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { staffService } from '../../services/staffService';
+import { authService } from '../../services/authService';
 import { getAssetUrl } from '../../services/api';
 import StatusBadge from '../../components/common/StatusBadge';
 import Loader from '../../components/common/Loader';
@@ -25,7 +26,9 @@ import {
   Check,
   ToggleLeft,
   ToggleRight,
-  PhoneCall
+  PhoneCall,
+  Mail,
+  AlertOctagon
 } from 'lucide-react';
 
 const StaffDashboard = () => {
@@ -34,6 +37,7 @@ const StaffDashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [completedHistory, setCompletedHistory] = useState([]);
   const [staffInfo, setStaffInfo] = useState(null);
+  const [emailStatus, setEmailStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(location.pathname === '/staff/history' ? 'COMPLETED' : 'ALL');
   const [feedback, setFeedback] = useState('');
@@ -53,9 +57,10 @@ const StaffDashboard = () => {
 
   const fetchStaffData = async () => {
     try {
-      const [tasksRes, historyRes] = await Promise.all([
+      const [tasksRes, historyRes, emailRes] = await Promise.all([
         staffService.getTasks(),
-        staffService.getHistory()
+        staffService.getHistory(),
+        authService.getEmailStatus().catch(() => ({ data: null }))
       ]);
 
       if (tasksRes.data) {
@@ -64,6 +69,9 @@ const StaffDashboard = () => {
       }
       if (historyRes.data) {
         setCompletedHistory(historyRes.data.history || []);
+      }
+      if (emailRes?.data) {
+        setEmailStatus(emailRes.data);
       }
     } catch (err) {
       console.error('Failed to load cleaning staff data:', err);
@@ -227,6 +235,24 @@ const StaffDashboard = () => {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid rgba(245, 158, 11, 0.4)', padding: '0.2rem 0.65rem', borderRadius: 'var(--radius-full)', color: '#fcd34d', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
               <HardHat size={14} /> Sanitation Operational Terminal
             </div>
+            {emailStatus && (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  background: emailStatus.status === 'Configured' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                  border: emailStatus.status === 'Configured' ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(245, 158, 11, 0.4)',
+                  padding: '0.2rem 0.65rem',
+                  borderRadius: 'var(--radius-full)',
+                  color: emailStatus.status === 'Configured' ? '#6ee7b7' : '#fcd34d',
+                  fontSize: '0.75rem',
+                  fontWeight: 700
+                }}
+              >
+                <Mail size={13} /> SMTP Status: {emailStatus.status || (emailStatus.isConfigured ? 'Configured' : 'Not Configured')}
+              </div>
+            )}
           </div>
           <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', marginTop: '0.2rem' }}>
             {staffInfo?.employeeCode ? `${staffInfo.employeeCode} - ` : ''}{user?.fullName}

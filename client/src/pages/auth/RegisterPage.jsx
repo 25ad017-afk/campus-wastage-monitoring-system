@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/authService';
 import {
-  UserPlus,
   AlertCircle,
+  CheckCircle2,
   User,
   Mail,
   Lock,
@@ -11,50 +12,124 @@ import {
   GraduationCap,
   HardHat,
   ShieldCheck,
-  Building,
-  BadgePercent
+  Send,
+  KeyRound,
+  RefreshCw,
+  Check
 } from 'lucide-react';
 
 const RegisterPage = () => {
+  const [role, setRole] = useState('STUDENT');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [role, setRole] = useState('STUDENT');
   const [employeeCode, setEmployeeCode] = useState('');
   const [assignedZone, setAssignedZone] = useState('');
+
+  const [otp, setOtp] = useState('');
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [statusMessage, setStatusMessage] = useState(null);
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    let timer;
+    if (cooldown > 0) {
+      timer = setInterval(() => setCooldown((prev) => prev - 1), 1000);
+    }
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  const handleSendOtp = async () => {
+    setError('');
+    setStatusMessage(null);
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setError('Please enter your college email address first.');
+      return;
+    }
+    if (!normalizedEmail.endsWith('@acetcbe.edu.in')) {
+      setError('Please use your official ACET college email address (@acetcbe.edu.in).');
+      return;
+    }
+    setSendingOtp(true);
+    try {
+      const res = await authService.sendOtp(normalizedEmail, role);
+      setIsOtpSent(true);
+      setCooldown(res.data?.cooldownSeconds || 60);
+      setStatusMessage({
+        type: 'success',
+        text: res.message || 'Verification code sent successfully to your official college email.'
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Failed to send verification code.');
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    setError('');
+    setStatusMessage(null);
+    if (!otp || otp.trim().length !== 6) {
+      setError('Please enter the 6-digit verification code.');
+      return;
+    }
+    setVerifyingOtp(true);
+    try {
+      await authService.verifyOtp(email.trim().toLowerCase(), otp.trim(), role);
+      setIsOtpVerified(true);
+      setStatusMessage({ type: 'success', text: 'Email verified successfully! You can now submit registration.' });
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Invalid verification code.');
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    // Frontend domain restriction check (case-insensitive)
+    setStatusMessage(null);
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail.endsWith('@acetcbe.edu.in')) {
-      setError('Please use your official ACET college email address.');
+      setError('Please use your official ACET college email address (@acetcbe.edu.in).');
       return;
     }
-
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+    if (!otp || otp.trim().length !== 6) {
+      if (!isOtpSent) {
+        setError('Mandatory OTP Verification: Please click "Send Code" to receive your 6-digit verification code on your college email.');
+      } else {
+        setError('Mandatory OTP Verification: Please enter the 6-digit verification code sent to your official college email.');
+      }
+      return;
+    }
     setLoading(true);
-
     try {
-      const payload = {
+      const userData = {
         fullName,
         email: normalizedEmail,
         password,
         role,
-        phoneNumber: phoneNumber || undefined,
+        phoneNumber: phoneNumber || null,
         employeeCode: role === 'STAFF' ? employeeCode : undefined,
-        assignedZone: role === 'STAFF' ? assignedZone : undefined
+        assignedZone: role === 'STAFF' ? assignedZone : undefined,
+        otp: otp.trim()
       };
-
-      const user = await register(payload);
-
+      const user = await register(userData);
       if (user.role === 'ADMIN') {
         navigate('/admin/dashboard');
       } else if (user.role === 'STAFF') {
@@ -63,38 +138,33 @@ const RegisterPage = () => {
         navigate('/student/dashboard');
       }
     } catch (err) {
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
-        setError('Network Error: Unable to reach backend server. Please verify the backend server is running on http://localhost:5000.');
-      } else {
-        setError(err.message || 'Registration failed. Please check form fields.');
-      }
+      setError(err.response?.data?.message || err.message || 'Registration failed. Please verify credentials.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container animate-fade-in" style={{ maxWidth: '540px', marginTop: '2.5rem', marginBottom: '4rem' }}>
+    <div className="container animate-fade-in" style={{ maxWidth: '520px', marginTop: '2.5rem', marginBottom: '4rem' }}>
       <div className="card" style={{ padding: '2.5rem 2rem' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <div
             style={{
-              width: '48px',
-              height: '48px',
+              background: '#ffffff',
               borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, var(--primary-600), var(--primary-800))',
-              color: '#ffffff',
-              display: 'flex',
+              padding: '0.4rem 0.8rem',
+              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 1rem auto',
-              boxShadow: 'var(--shadow-sm)'
+              marginBottom: '0.8rem',
+              border: '1px solid var(--border-color)'
             }}
           >
-            <UserPlus size={24} />
+            <img
+              src="/assets/images/college_banner.jpeg"
+              alt="Akshaya College of Engineering and Technology"
+              style={{ maxHeight: '44px', maxWidth: '100%', objectFit: 'contain', display: 'block' }}
+            />
           </div>
           <div
             style={{
@@ -109,35 +179,40 @@ const RegisterPage = () => {
               fontSize: '0.72rem',
               fontWeight: 700,
               letterSpacing: '0.03em',
-              marginBottom: '0.6rem'
+              marginBottom: '0.5rem'
             }}
           >
             🏛️ AKSHAYA COLLEGE OF ENGINEERING AND TECHNOLOGY
           </div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '0.2rem' }}>
-            Create Campus Account
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--slate-900)' }}>
+            Create College Account
           </h1>
-          <p style={{ color: 'var(--slate-500)', fontSize: '0.86rem', marginTop: '0.25rem' }}>
-            Kinathukadavu, Coimbatore &bull; Campus Wastage Monitoring Network
+          <p style={{ color: 'var(--slate-500)', fontSize: '0.82rem', marginTop: '0.15rem' }}>
+            Pollachi &bull; CWMS Campus Sanitation &amp; Waste Management
           </p>
         </div>
 
-        {/* Error Alert */}
         {error && (
-          <div className="alert-box alert-error">
+          <div className="alert-box alert-error" style={{ marginBottom: '1.25rem' }}>
             <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
             <span>{error}</span>
           </div>
         )}
 
+        {statusMessage && (
+          <div className="alert-box alert-success" style={{ marginBottom: '1.25rem' }}>
+            <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+            <span>{statusMessage.text}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
-          {/* Role Selector Tabs */}
           <div className="form-group">
             <label className="form-label">Select Account Type</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
               <button
                 type="button"
-                className={`btn btn-sm ${role === 'STUDENT' ? 'btn-primary' : 'btn-secondary'}`}
+                className={'btn btn-sm ' + (role === 'STUDENT' ? 'btn-primary' : 'btn-secondary')}
                 onClick={() => setRole('STUDENT')}
                 style={{ flexDirection: 'column', padding: '0.5rem', gap: '0.2rem' }}
               >
@@ -146,7 +221,7 @@ const RegisterPage = () => {
               </button>
               <button
                 type="button"
-                className={`btn btn-sm ${role === 'STAFF' ? 'btn-primary' : 'btn-secondary'}`}
+                className={'btn btn-sm ' + (role === 'STAFF' ? 'btn-primary' : 'btn-secondary')}
                 onClick={() => setRole('STAFF')}
                 style={{ flexDirection: 'column', padding: '0.5rem', gap: '0.2rem' }}
               >
@@ -155,7 +230,7 @@ const RegisterPage = () => {
               </button>
               <button
                 type="button"
-                className={`btn btn-sm ${role === 'ADMIN' ? 'btn-primary' : 'btn-secondary'}`}
+                className={'btn btn-sm ' + (role === 'ADMIN' ? 'btn-primary' : 'btn-secondary')}
                 onClick={() => setRole('ADMIN')}
                 style={{ flexDirection: 'column', padding: '0.5rem', gap: '0.2rem' }}
               >
@@ -165,7 +240,6 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* Full Name */}
           <div className="form-group">
             <label className="form-label" htmlFor="fullName">Full Name</label>
             <div style={{ position: 'relative' }}>
@@ -183,26 +257,70 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* Email */}
           <div className="form-group">
-            <label className="form-label" htmlFor="email">Campus Email Address</label>
-            <div style={{ position: 'relative' }}>
-              <input
-                id="email"
-                type="email"
-                className="input-field"
-                placeholder="priya.student@acetcbe.edu.in"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={{ paddingLeft: '2.4rem' }}
-              />
-              <Mail size={16} color="var(--slate-400)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+            <label className="form-label" htmlFor="email">Official College Email Address</label>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <input
+                  id="email"
+                  type="email"
+                  className="input-field"
+                  placeholder="e.g. priya.student@acetcbe.edu.in"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setIsOtpVerified(false);
+                  }}
+                  required
+                  style={{ paddingLeft: '2.4rem' }}
+                />
+                <Mail size={16} color="var(--slate-400)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+              </div>
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={sendingOtp || cooldown > 0}
+                className="btn btn-secondary btn-sm"
+                style={{ whiteSpace: 'nowrap', fontSize: '0.78rem', padding: '0 0.85rem' }}
+              >
+                {sendingOtp ? <RefreshCw size={13} className="animate-spin" /> : cooldown > 0 ? ('Resend (' + cooldown + 's)') : <><Send size={13} /> Send Code</>}
+              </button>
             </div>
             <div className="form-hint">Accepted official domain: @acetcbe.edu.in</div>
           </div>
 
-          {/* Password */}
+          {isOtpSent && (
+            <div style={{ background: 'var(--slate-50)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1rem', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                <label className="form-label" style={{ margin: 0, fontSize: '0.82rem' }}>6-Digit Verification Code</label>
+                {isOtpVerified && <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 700 }}><Check size={14} /> Verified</span>}
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    className="input-field"
+                    placeholder="Enter 6-digit OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                    style={{ paddingLeft: '2.4rem', letterSpacing: '0.2em', fontFamily: 'monospace', fontWeight: 700 }}
+                  />
+                  <KeyRound size={16} color="var(--slate-400)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleVerifyOtp}
+                  disabled={verifyingOtp || isOtpVerified || otp.length !== 6}
+                  className="btn btn-primary btn-sm"
+                  style={{ whiteSpace: 'nowrap', fontSize: '0.78rem' }}
+                >
+                  {verifyingOtp ? 'Verifying...' : isOtpVerified ? 'Verified' : 'Verify Code'}
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="form-group">
             <label className="form-label" htmlFor="password">Security Password</label>
             <div style={{ position: 'relative' }}>
@@ -221,7 +339,6 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* Phone Number */}
           <div className="form-group">
             <label className="form-label" htmlFor="phone">Contact Mobile Number (Optional)</label>
             <div style={{ position: 'relative' }}>
@@ -238,17 +355,14 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* Conditional Fields for Cleaning Staff */}
           {role === 'STAFF' && (
             <div style={{ background: 'var(--slate-50)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', marginBottom: '1.25rem' }}>
-              <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--slate-800)', marginBottom: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--slate-800)', marginBottom: '0.85rem', textTransform: 'uppercase' }}>
                 Sanitation Crew Profile
               </h4>
-
               <div className="form-group">
-                <label className="form-label" htmlFor="employeeCode">Employee Roster Code</label>
+                <label className="form-label">Employee Code</label>
                 <input
-                  id="employeeCode"
                   type="text"
                   className="input-field"
                   placeholder="e.g. STF-2026-05"
@@ -257,11 +371,9 @@ const RegisterPage = () => {
                   required={role === 'STAFF'}
                 />
               </div>
-
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" htmlFor="assignedZone">Primary Campus Zone</label>
+                <label className="form-label">Assigned Campus Zone</label>
                 <select
-                  id="assignedZone"
                   className="select-field"
                   value={assignedZone}
                   onChange={(e) => setAssignedZone(e.target.value)}
@@ -270,22 +382,10 @@ const RegisterPage = () => {
                   <option value="">Select Primary Assigned Zone</option>
                   <option value="Academic Area">Academic Area</option>
                   <option value="Central Library">Central Library</option>
-                  <option value="Laboratory Area">Laboratory Area</option>
-                  <option value="Smart Classroom Area">Smart Classroom Area</option>
-                  <option value="Administrative / Office Area">Administrative / Office Area</option>
-                  <option value="Conference Hall">Conference Hall</option>
-                  <option value="Guest Room & TV Hall">Guest Room & TV Hall</option>
                   <option value="Food Court & Amenity Center">Food Court & Amenity Center</option>
                   <option value="Hostel Area">Hostel Area</option>
                   <option value="Sports Area">Sports Area</option>
-                  <option value="Fitness Centre">Fitness Centre</option>
-                  <option value="Transport Area">Transport Area</option>
-                  <option value="Main Entrance">Main Entrance</option>
-                  <option value="Campus Internal Area">Campus Internal Area</option>
-                  <option value="Green Campus Area">Green Campus Area</option>
-                  <option value="Student Activity Area">Student Activity Area</option>
-                  <option value="Waste Collection Area">Waste Collection Area</option>
-                  <option value="Other Campus Area">Other Campus Area</option>
+                  <option value="General Campus">General Campus</option>
                 </select>
               </div>
             </div>

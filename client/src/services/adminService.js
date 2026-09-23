@@ -51,6 +51,16 @@ export const adminService = {
   },
 
   // Override report lifecycle status
+  getSmtpStatus: async () => {
+    const response = await api.get('/admin/smtp-status');
+    return response.data;
+  },
+
+  updateSmtpConfig: async (configData) => {
+    const response = await api.post('/admin/smtp-config', configData);
+    return response.data;
+  },
+
   updateStatus: async (reportId, status) => {
     const response = await api.patch(`/admin/reports/${reportId}/status`, { status });
     return response.data;

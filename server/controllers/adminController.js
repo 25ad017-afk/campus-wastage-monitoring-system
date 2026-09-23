@@ -1,9 +1,12 @@
+const fs = require('fs');
+const path = require('path');
 const AdminModel = require('../models/adminModel');
 const ReportModel = require('../models/reportModel');
 const StaffModel = require('../models/staffModel');
 const AssignmentModel = require('../models/assignmentModel');
 const NotificationModel = require('../models/notificationModel');
 const ApiResponse = require('../utils/apiResponse');
+const emailService = require('../services/emailService');
 
 class AdminController {
   /**
@@ -45,7 +48,6 @@ class AdminController {
       next(error);
     }
   }
-
 
   /**
    * @route   GET /api/admin/users
@@ -250,6 +252,115 @@ class AdminController {
       return ApiResponse.success(res, 'Filtered reports list retrieved.', {
         count: reports.length,
         reports
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * @route   GET /api/admin/smtp-status
+   * @desc    Get detailed SMTP status and configuration for facilities administrator
+   * @access  Private (Admin only)
+   */
+  static async getSmtpStatus(req, res, next) {
+    try {
+      const isConfigured = emailService.isConfigured;
+      const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+      const port = parseInt(process.env.EMAIL_PORT || '587', 10);
+      const user = (process.env.EMAIL_USER || '').trim();
+      const from = (process.env.EMAIL_FROM || user || '').trim();
+      const secure = process.env.EMAIL_SECURE === 'true' || port === 465;
+
+      // Mask user email for privacy (never expose password)
+      let maskedUser = 'Not configured';
+      if (user) {
+        const parts = user.split('@');
+        if (parts.length === 2) {
+          const namePart = parts[0];
+          const maskedName = namePart.length > 3 ? namePart.slice(0, 2) + '***' + namePart.slice(-1) : namePart[0] + '***';
+          maskedUser = maskedName + '@' + parts[1];
+        } else {
+          maskedUser = user.slice(0, 2) + '***';
+        }
+      }
+
+      return ApiResponse.success(res, 'SMTP status retrieved.', {
+        status: isConfigured ? 'Configured' : 'Not Configured',
+        isConfigured,
+        host,
+        port,
+        secure,
+        senderAccount: isConfigured ? maskedUser : 'Not configured',
+        fromAddress: from ? (from.includes('@') ? from.replace(/^(.)(.*)(@.*)$/, '$1***$3') : from) : 'Not configured',
+        studentDomain: process.env.STUDENT_EMAIL_DOMAIN || '@acetcbe.edu.in',
+        staffDomain: process.env.STAFF_EMAIL_DOMAIN || '@acetcbe.edu.in'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * @route   POST /api/admin/smtp-config
+   * @desc    Securely update SMTP email credentials server-side
+   * @access  Private (Admin only)
+   */
+  static async updateSmtpConfig(req, res, next) {
+    try {
+      const { emailHost, emailPort, emailUser, emailPassword, emailFrom, emailSecure } = req.body;
+
+      if (!emailUser || !emailPassword) {
+        return ApiResponse.error(res, 'Both Sender Email Address and App Password are required.', 400);
+      }
+
+      const host = (emailHost || 'smtp.gmail.com').trim();
+      const port = String(emailPort || '587').trim();
+      const user = emailUser.trim();
+      const pass = emailPassword.trim();
+      const from = (emailFrom || user).trim();
+      const secure = emailSecure ? 'true' : 'false';
+
+      // Update in-memory environment variables
+      process.env.EMAIL_HOST = host;
+      process.env.EMAIL_PORT = port;
+      process.env.EMAIL_USER = user;
+      process.env.EMAIL_PASSWORD = pass;
+      process.env.EMAIL_FROM = from;
+      process.env.EMAIL_SECURE = secure;
+
+      // Safely update server/.env file
+      const envPath = path.join(__dirname, '..', '.env');
+      if (fs.existsSync(envPath)) {
+        let envContent = fs.readFileSync(envPath, 'utf8');
+
+        const updateOrAppend = (key, val) => {
+          const regex = new RegExp(`^#?\\s*${key}=.*$`, 'm');
+          if (regex.test(envContent)) {
+            envContent = envContent.replace(regex, `${key}=${val}`);
+          } else {
+            envContent += `\n${key}=${val}`;
+          }
+        };
+
+        updateOrAppend('EMAIL_HOST', host);
+        updateOrAppend('EMAIL_PORT', port);
+        updateOrAppend('EMAIL_SECURE', secure);
+        updateOrAppend('EMAIL_USER', user);
+        updateOrAppend('EMAIL_PASSWORD', pass);
+        updateOrAppend('EMAIL_FROM', from);
+
+        fs.writeFileSync(envPath, envContent, 'utf8');
+      }
+
+      // Re-initialize emailService transporter with new credentials
+      emailService.initTransporter();
+
+      return ApiResponse.success(res, 'SMTP credentials updated and live email delivery activated successfully.', {
+        status: emailService.isConfigured ? 'Configured' : 'Not Configured',
+        isConfigured: emailService.isConfigured,
+        host,
+        port: parseInt(port, 10)
       });
     } catch (error) {
       next(error);

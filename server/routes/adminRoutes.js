@@ -31,4 +31,8 @@ router.patch('/reports/:id/priority', AdminController.changePriority);
 // 8. Change lifecycle status of a report (Reported, Assigned, In_Progress, Resolved, Rejected)
 router.patch('/reports/:id/status', AdminController.changeStatus);
 
+// 9. SMTP Email Configuration & Status
+router.get('/smtp-status', AdminController.getSmtpStatus);
+router.post('/smtp-config', AdminController.updateSmtpConfig);
+
 module.exports = router;

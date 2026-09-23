@@ -117,6 +117,7 @@ class EmbeddedDatabase {
         role: 'ADMIN',
         phone_number: '9876543210',
         is_active: 1,
+        is_email_verified: 1,
         created_at: new Date('2026-01-01T08:00:00Z')
       },
       {
@@ -127,6 +128,7 @@ class EmbeddedDatabase {
         role: 'STAFF',
         phone_number: '9876543211',
         is_active: 1,
+        is_email_verified: 1,
         created_at: new Date('2026-01-02T08:00:00Z')
       },
       {
@@ -137,6 +139,7 @@ class EmbeddedDatabase {
         role: 'STUDENT',
         phone_number: '9876543212',
         is_active: 1,
+        is_email_verified: 1,
         created_at: new Date('2026-01-03T08:00:00Z')
       }
     ];
@@ -380,15 +383,24 @@ class EmbeddedDatabase {
 
     // 3. Users (Admin, 4 Cleaning Staff, 4 Students)
     this.users = [
-      { user_id: 1, full_name: 'Campus Chief Administrator', email: 'admin@acetcbe.edu.in', password_hash: adminHash, role: 'ADMIN', phone_number: '9876543210', is_active: 1, created_at: new Date('2026-01-01T08:00:00Z') },
-      { user_id: 2, full_name: 'Ramesh Kumar (Cleaning Crew)', email: 'ramesh.staff@acetcbe.edu.in', password_hash: staffHash, role: 'STAFF', phone_number: '9876543211', is_active: 1, created_at: new Date('2026-01-02T08:00:00Z') },
-      { user_id: 3, full_name: 'Priya Sharma (Student)', email: 'priya.student@acetcbe.edu.in', password_hash: passwordHash, role: 'STUDENT', phone_number: '9876543221', is_active: 1, created_at: new Date('2026-01-03T08:00:00Z') },
-      { user_id: 4, full_name: 'Sunita Devi (Cleaning Crew)', email: 'sunita.staff@acetcbe.edu.in', password_hash: staffHash, role: 'STAFF', phone_number: '9876543212', is_active: 1, created_at: new Date('2026-01-04T08:00:00Z') },
-      { user_id: 5, full_name: 'Manoj Patel (Cleaning Crew)', email: 'manoj.staff@acetcbe.edu.in', password_hash: staffHash, role: 'STAFF', phone_number: '9876543213', is_active: 1, created_at: new Date('2026-01-05T08:00:00Z') },
-      { user_id: 6, full_name: 'Kavitha Murugan (Cleaning Crew)', email: 'kavitha.staff@acetcbe.edu.in', password_hash: staffHash, role: 'STAFF', phone_number: '9876543214', is_active: 1, created_at: new Date('2026-01-06T08:00:00Z') },
-      { user_id: 7, full_name: 'Rohit Verma (Student)', email: 'rohit.student@acetcbe.edu.in', password_hash: passwordHash, role: 'STUDENT', phone_number: '9876543222', is_active: 1, created_at: new Date('2026-01-07T08:00:00Z') },
-      { user_id: 8, full_name: 'Ananya Iyer (Student)', email: 'ananya.student@acetcbe.edu.in', password_hash: passwordHash, role: 'STUDENT', phone_number: '9876543223', is_active: 1, created_at: new Date('2026-01-08T08:00:00Z') },
-      { user_id: 9, full_name: 'Karthik Rao (Student)', email: 'karthik.student@acetcbe.edu.in', password_hash: passwordHash, role: 'STUDENT', phone_number: '9876543224', is_active: 1, created_at: new Date('2026-01-09T08:00:00Z') }
+      { user_id: 1, full_name: 'Campus Chief Administrator', email: 'admin@acetcbe.edu.in', password_hash: adminHash, role: 'ADMIN', phone_number: '9876543210', is_active: 1,
+        is_email_verified: 1, created_at: new Date('2026-01-01T08:00:00Z') },
+      { user_id: 2, full_name: 'Ramesh Kumar (Cleaning Crew)', email: 'ramesh.staff@acetcbe.edu.in', password_hash: staffHash, role: 'STAFF', phone_number: '9876543211', is_active: 1,
+        is_email_verified: 1, created_at: new Date('2026-01-02T08:00:00Z') },
+      { user_id: 3, full_name: 'Priya Sharma (Student)', email: 'priya.student@acetcbe.edu.in', password_hash: passwordHash, role: 'STUDENT', phone_number: '9876543221', is_active: 1,
+        is_email_verified: 1, created_at: new Date('2026-01-03T08:00:00Z') },
+      { user_id: 4, full_name: 'Sunita Devi (Cleaning Crew)', email: 'sunita.staff@acetcbe.edu.in', password_hash: staffHash, role: 'STAFF', phone_number: '9876543212', is_active: 1,
+        is_email_verified: 1, created_at: new Date('2026-01-04T08:00:00Z') },
+      { user_id: 5, full_name: 'Manoj Patel (Cleaning Crew)', email: 'manoj.staff@acetcbe.edu.in', password_hash: staffHash, role: 'STAFF', phone_number: '9876543213', is_active: 1,
+        is_email_verified: 1, created_at: new Date('2026-01-05T08:00:00Z') },
+      { user_id: 6, full_name: 'Kavitha Murugan (Cleaning Crew)', email: 'kavitha.staff@acetcbe.edu.in', password_hash: staffHash, role: 'STAFF', phone_number: '9876543214', is_active: 1,
+        is_email_verified: 1, created_at: new Date('2026-01-06T08:00:00Z') },
+      { user_id: 7, full_name: 'Rohit Verma (Student)', email: 'rohit.student@acetcbe.edu.in', password_hash: passwordHash, role: 'STUDENT', phone_number: '9876543222', is_active: 1,
+        is_email_verified: 1, created_at: new Date('2026-01-07T08:00:00Z') },
+      { user_id: 8, full_name: 'Ananya Iyer (Student)', email: 'ananya.student@acetcbe.edu.in', password_hash: passwordHash, role: 'STUDENT', phone_number: '9876543223', is_active: 1,
+        is_email_verified: 1, created_at: new Date('2026-01-08T08:00:00Z') },
+      { user_id: 9, full_name: 'Karthik Rao (Student)', email: 'karthik.student@acetcbe.edu.in', password_hash: passwordHash, role: 'STUDENT', phone_number: '9876543224', is_active: 1,
+        is_email_verified: 1, created_at: new Date('2026-01-09T08:00:00Z') }
     ];
 
     // 4. Cleaning Staff Profiles
@@ -510,7 +522,7 @@ class EmbeddedDatabase {
     }
 
     // 1. Users queries
-    if (/SELECT .* FROM users WHERE email = \?/i.test(cleanSql)) {
+    if (/SELECT .* FROM users WHERE (LOWER\(email\)|email) = \?/i.test(cleanSql)) {
       const email = params[0];
       const user = this.users.find(u => u.email.toLowerCase() === email.toLowerCase());
       return [user ? [user] : []];
@@ -519,6 +531,12 @@ class EmbeddedDatabase {
       const id = parseInt(params[0], 10);
       const user = this.users.find(u => u.user_id === id);
       return [user ? [user] : []];
+    }
+    if (/UPDATE users SET is_email_verified = 1 WHERE user_id = \?/i.test(cleanSql)) {
+      const uid = parseInt(params[0], 10);
+      const user = this.users.find(u => u.user_id === uid);
+      if (user) user.is_email_verified = 1;
+      return [{ affectedRows: user ? 1 : 0 }];
     }
     if (/INSERT INTO users/i.test(cleanSql)) {
       const [fullName, email, passwordHash, role, phoneNumber] = params;
@@ -531,6 +549,7 @@ class EmbeddedDatabase {
         role,
         phone_number: phoneNumber || null,
         is_active: 1,
+        is_email_verified: 1,
         created_at: new Date()
       };
       this.users.push(newUser);
@@ -548,7 +567,26 @@ class EmbeddedDatabase {
       return [result];
     }
 
-    // 2. Staff queries
+    
+    // isStaffAuthorized query handler
+    if (/users u LEFT JOIN cleaning_staff s/i.test(cleanSql)) {
+      const emailParam = (params[0] || '').toLowerCase();
+      const u = this.users.find(usr => usr.email.toLowerCase() === emailParam);
+      if (!u || !['STAFF', 'ADMIN'].includes(u.role)) {
+        return [[]];
+      }
+      const s = this.cleaning_staff.find(st => st.user_id === u.user_id) || {};
+      return [[{
+        user_id: u.user_id,
+        email: u.email,
+        role: u.role,
+        staff_id: s.staff_id || null,
+        is_available: s.is_available ?? 1,
+        assigned_zone: s.assigned_zone || 'General Campus'
+      }]];
+    }
+    // isStaffAuthorizedQuery
+// 2. Staff queries
     if (/SELECT .* FROM cleaning_staff s JOIN users u .* s\.user_id = \?/i.test(cleanSql)) {
       const uid = parseInt(params[0], 10);
       const s = this.cleaning_staff.find(st => st.user_id === uid);

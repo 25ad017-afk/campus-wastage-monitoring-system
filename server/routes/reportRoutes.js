@@ -22,6 +22,7 @@ router.post(
 );
 
 // 2. View logged-in user's own reports (Student portal)
+router.get('/my', verifyToken, ReportController.getMyReports);
 router.get(
   '/my-reports',
   verifyToken,
