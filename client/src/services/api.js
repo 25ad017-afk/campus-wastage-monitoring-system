@@ -1,8 +1,10 @@
 import axios from 'axios';
 
 // Derive API base URL dynamically for both local development and cloud production
-const rawBaseUrl = import.meta.env.VITE_API_URL || '';
-const apiBaseUrl = rawBaseUrl ? `${rawBaseUrl.replace(/\/+$/, '')}/api` : '/api';
+const rawBaseUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+const apiBaseUrl = rawBaseUrl
+  ? (rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl}/api`)
+  : '/api';
 
 const api = axios.create({
   baseURL: apiBaseUrl,
@@ -19,7 +21,8 @@ export const getAssetUrl = (assetPath) => {
   if (assetPath.startsWith('http://') || assetPath.startsWith('https://') || assetPath.startsWith('data:')) {
     return assetPath;
   }
-  return `${rawBaseUrl.replace(/\/+$/, '')}${assetPath.startsWith('/') ? '' : '/'}${assetPath}`;
+  const assetBase = rawBaseUrl.endsWith('/api') ? rawBaseUrl.slice(0, -4) : rawBaseUrl;
+  return `${assetBase}${assetPath.startsWith('/') ? '' : '/'}${assetPath}`;
 };
 
 // Request interceptor: Attach JWT token from localStorage

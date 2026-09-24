@@ -11,11 +11,13 @@ class ReportController {
    * Helper: Resolve base URL for email action links and redirects
    */
   static getBaseUrl(req) {
+    if (req && (req.headers['x-forwarded-host'] || req.headers.host)) {
+      const forwardedHost = req.headers['x-forwarded-host'] || req.headers.host;
+      const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').split(',')[0].trim();
+      return `${proto}://${forwardedHost}`.replace(/\/$/, '');
+    }
     if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, '');
     if (process.env.CLIENT_URL) return process.env.CLIENT_URL.replace(/\/$/, '');
-    const forwardedHost = req.headers['x-forwarded-host'] || req.headers.host;
-    const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').split(',')[0].trim();
-    if (forwardedHost) return `${proto}://${forwardedHost}`.replace(/\/$/, '');
     return 'https://campus-wastage-monitoring-system.vercel.app';
   }
 
