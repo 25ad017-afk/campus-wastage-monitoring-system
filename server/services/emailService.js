@@ -40,17 +40,19 @@ class EmailService {
    * Initialize or Reload Nodemailer SMTP Transport
    */
   initTransporter() {
-    const host = process.env.EMAIL_HOST ? process.env.EMAIL_HOST.trim() : 'smtp.gmail.com';
-    const port = parseInt(process.env.EMAIL_PORT || '587', 10);
+    const host = (process.env.EMAIL_HOST || 'smtp.gmail.com').trim();
+    const defaultPort = (host === 'smtp.gmail.com') ? 465 : 587;
+    const port = parseInt(process.env.EMAIL_PORT || defaultPort, 10);
     const user = process.env.EMAIL_USER ? process.env.EMAIL_USER.trim().replace(/^["']|["']$/g, '') : '';
     // Clean App Password (strip internal spaces and surrounding quotes often present when copied from Google)
     const pass = process.env.EMAIL_PASSWORD ? process.env.EMAIL_PASSWORD.trim().replace(/^["']|["']$/g, '').replace(/\s+/g, '') : '';
-    const secure = process.env.EMAIL_SECURE === 'true' || port === 465;
+    const secure = process.env.EMAIL_SECURE !== undefined
+      ? (process.env.EMAIL_SECURE === 'true' || process.env.EMAIL_SECURE === '1')
+      : (port === 465 || host === 'smtp.gmail.com');
 
     if (isPlaceholder(user) || isPlaceholder(pass)) {
       this.transporter = null;
       this.isConfigured = false;
-      console.log('ℹ️ SMTP Email Service: Credentials are not configured in server/.env (EMAIL_USER / EMAIL_PASSWORD).');
       return;
     }
 
@@ -77,7 +79,7 @@ class EmailService {
 
       this.transporter = nodemailer.createTransport(transportOptions);
       this.isConfigured = true;
-      console.log(`✅ SMTP Email Service: Transporter initialized for ${user} via ${host}:${port}`);
+      console.log(`✅ SMTP Email Service: Transporter initialized for ${user} via ${host}:${port} (SSL: ${secure})`);
     } catch (err) {
       console.warn('⚠️ SMTP Email Service initialization warning:', err.message);
       this.transporter = null;
@@ -93,7 +95,7 @@ class EmailService {
     if (!this.isConfigured || !this.transporter) {
       return {
         success: false,
-        message: 'SMTP credentials are not configured in server/.env (EMAIL_USER or EMAIL_PASSWORD missing).'
+        message: 'SMTP credentials are not configured. Please set EMAIL_USER and EMAIL_PASSWORD in your environment variables.'
       };
     }
 
@@ -115,11 +117,16 @@ class EmailService {
    * Status inspection (safe for API response, never leaks passwords)
    */
   getStatus() {
-    const user = process.env.EMAIL_USER ? process.env.EMAIL_USER.trim() : '';
-    const pass = process.env.EMAIL_PASSWORD ? process.env.EMAIL_PASSWORD.trim() : '';
-    const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
-    const port = parseInt(process.env.EMAIL_PORT || '587', 10);
+    this.initTransporter();
+    const user = process.env.EMAIL_USER ? process.env.EMAIL_USER.trim().replace(/^["']|["']$/g, '') : '';
+    const pass = process.env.EMAIL_PASSWORD ? process.env.EMAIL_PASSWORD.trim().replace(/^["']|["']$/g, '') : '';
+    const host = (process.env.EMAIL_HOST || 'smtp.gmail.com').trim();
+    const defaultPort = (host === 'smtp.gmail.com') ? 465 : 587;
+    const port = parseInt(process.env.EMAIL_PORT || defaultPort, 10);
     const from = (process.env.EMAIL_FROM || user || '').trim();
+    const secure = process.env.EMAIL_SECURE !== undefined
+      ? (process.env.EMAIL_SECURE === 'true' || process.env.EMAIL_SECURE === '1')
+      : (port === 465 || host === 'smtp.gmail.com');
 
     const configured = Boolean(!isPlaceholder(user) && !isPlaceholder(pass) && this.transporter);
 
@@ -140,7 +147,7 @@ class EmailService {
       isConfigured: configured,
       host,
       port,
-      secure: process.env.EMAIL_SECURE === 'true' || port === 465,
+      secure,
       senderAccount: configured ? maskedUser : 'Not configured',
       fromAddress: from ? (from.includes('@') ? from.replace(/^(.)(.*)(@.*)$/, '$1***$3') : from) : 'Not configured',
       studentDomain: process.env.STUDENT_EMAIL_DOMAIN || '@acetcbe.edu.in',
@@ -165,7 +172,7 @@ class EmailService {
     if (!this.isConfigured || !this.transporter) {
       return {
         success: false,
-        error: 'SMTP Email Service is not configured. Please set EMAIL_USER and EMAIL_PASSWORD in server/.env.',
+        error: 'SMTP Email Service is not configured. Please set EMAIL_USER and EMAIL_PASSWORD in your environment variables.',
         mode: 'unconfigured'
       };
     }

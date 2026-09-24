@@ -2,7 +2,11 @@ const mysql = require('mysql2/promise');
 const dotenv = require('dotenv');
 const embeddedDb = require('./embeddedDb');
 
+const path = require('path');
+
 dotenv.config();
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
 // Create connection pool (supports both cloud URI and individual env variables)
 const dbConfig = process.env.DATABASE_URL || process.env.MYSQL_URL || {

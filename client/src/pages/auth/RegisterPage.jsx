@@ -15,8 +15,12 @@ import {
   Send,
   KeyRound,
   RefreshCw,
-  Check
+  Check,
+  Sparkles,
+  Info,
+  Radio
 } from 'lucide-react';
+import GoogleAuthConfirmModal from '../../components/common/GoogleAuthConfirmModal';
 
 const RegisterPage = () => {
   const [role, setRole] = useState('STUDENT');
@@ -37,6 +41,26 @@ const RegisterPage = () => {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [emailStatus, setEmailStatus] = useState(null);
+
+  // Load backend email service status & demo auth mode
+  useEffect(() => {
+    const fetchEmailStatus = async () => {
+      try {
+        const res = await authService.getEmailStatus();
+        if (res.data) {
+          setEmailStatus(res.data);
+        }
+      } catch (e) {}
+    };
+    fetchEmailStatus();
+  }, []);
+
+  const isDemoAuth =
+    emailStatus?.demoAuthMode !== undefined
+      ? emailStatus.demoAuthMode
+      : (import.meta.env.VITE_DEMO_AUTH_MODE !== 'false');
 
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -100,7 +124,12 @@ const RegisterPage = () => {
     e.preventDefault();
     setError('');
     setStatusMessage(null);
+
     const normalizedEmail = email.trim().toLowerCase();
+    if (!fullName.trim()) {
+      setError('Please provide your full name.');
+      return;
+    }
     if (!normalizedEmail.endsWith('@acetcbe.edu.in')) {
       setError('Please use your official ACET college email address (@acetcbe.edu.in).');
       return;
@@ -109,6 +138,12 @@ const RegisterPage = () => {
       setError('Password must be at least 6 characters long.');
       return;
     }
+
+    if (isDemoAuth) {
+      setConfirmModalOpen(true);
+      return;
+    }
+
     if (!otp || otp.trim().length !== 6) {
       if (!isOtpSent) {
         setError('Mandatory OTP Verification: Please click "Send Code" to receive your 6-digit verification code on your college email.');
@@ -117,19 +152,26 @@ const RegisterPage = () => {
       }
       return;
     }
+
+    executeRegister(normalizedEmail, otp.trim());
+  };
+
+  const executeRegister = async (normalizedEmail, registerOtp = '') => {
     setLoading(true);
+    setError('');
     try {
       const userData = {
-        fullName,
+        fullName: fullName.trim(),
         email: normalizedEmail,
         password,
         role,
         phoneNumber: phoneNumber || null,
         employeeCode: role === 'STAFF' ? employeeCode : undefined,
         assignedZone: role === 'STAFF' ? assignedZone : undefined,
-        otp: otp.trim()
+        otp: registerOtp
       };
       const user = await register(userData);
+      setConfirmModalOpen(false);
       if (user.role === 'ADMIN') {
         navigate('/admin/dashboard');
       } else if (user.role === 'STAFF') {
@@ -138,10 +180,19 @@ const RegisterPage = () => {
         navigate('/student/dashboard');
       }
     } catch (err) {
+      setConfirmModalOpen(false);
       setError(err.response?.data?.message || err.message || 'Registration failed. Please verify credentials.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancelConfirmation = () => {
+    setConfirmModalOpen(false);
+    setStatusMessage({
+      type: 'info',
+      text: 'Registration cancelled. Account has not been created.'
+    });
   };
 
   return (
@@ -190,6 +241,45 @@ const RegisterPage = () => {
           <p style={{ color: 'var(--slate-500)', fontSize: '0.82rem', marginTop: '0.15rem' }}>
             Pollachi &bull; CWMS Campus Sanitation &amp; Waste Management
           </p>
+
+          {/* Mode Indicator Badge */}
+          <div style={{ marginTop: '0.6rem' }}>
+            {isDemoAuth ? (
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  background: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  color: '#1e40af',
+                  padding: '0.2rem 0.65rem',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}
+              >
+                <Sparkles size={12} color="#2563eb" /> DEMO AUTH MODE ACTIVE (Email OTP Bypassed)
+              </span>
+            ) : (
+              <span
+                style={{
+                  fontSize: '0.70rem',
+                  background: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  color: '#065f46',
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem'
+                }}
+              >
+                <Radio size={11} color="#059669" /> SMTP Real Email Active
+              </span>
+            )}
+          </div>
         </div>
 
         {error && (
@@ -200,8 +290,15 @@ const RegisterPage = () => {
         )}
 
         {statusMessage && (
-          <div className="alert-box alert-success" style={{ marginBottom: '1.25rem' }}>
-            <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+          <div
+            className={`alert-box ${statusMessage.type === 'info' ? 'alert-info' : 'alert-success'}`}
+            style={{ marginBottom: '1.25rem' }}
+          >
+            {statusMessage.type === 'info' ? (
+              <Info size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+            ) : (
+              <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+            )}
             <span>{statusMessage.text}</span>
           </div>
         )}
@@ -276,20 +373,23 @@ const RegisterPage = () => {
                 />
                 <Mail size={16} color="var(--slate-400)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
               </div>
-              <button
-                type="button"
-                onClick={handleSendOtp}
-                disabled={sendingOtp || cooldown > 0}
-                className="btn btn-secondary btn-sm"
-                style={{ whiteSpace: 'nowrap', fontSize: '0.78rem', padding: '0 0.85rem' }}
-              >
-                {sendingOtp ? <RefreshCw size={13} className="animate-spin" /> : cooldown > 0 ? ('Resend (' + cooldown + 's)') : <><Send size={13} /> Send Code</>}
-              </button>
+
+              {!isDemoAuth && (
+                <button
+                  type="button"
+                  onClick={handleSendOtp}
+                  disabled={sendingOtp || cooldown > 0}
+                  className="btn btn-secondary btn-sm"
+                  style={{ whiteSpace: 'nowrap', fontSize: '0.78rem', padding: '0 0.85rem' }}
+                >
+                  {sendingOtp ? <RefreshCw size={13} className="animate-spin" /> : cooldown > 0 ? ('Resend (' + cooldown + 's)') : <><Send size={13} /> Send Code</>}
+                </button>
+              )}
             </div>
             <div className="form-hint">Accepted official domain: @acetcbe.edu.in</div>
           </div>
 
-          {isOtpSent && (
+          {!isDemoAuth && isOtpSent && (
             <div style={{ background: 'var(--slate-50)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1rem', marginBottom: '1.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
                 <label className="form-label" style={{ margin: 0, fontSize: '0.82rem' }}>6-Digit Verification Code</label>
@@ -408,6 +508,18 @@ const RegisterPage = () => {
           </Link>
         </div>
       </div>
+
+      {/* Google-Style Confirmation Dialog for Demo Mode Registration */}
+      <GoogleAuthConfirmModal
+        isOpen={confirmModalOpen}
+        email={email.trim().toLowerCase()}
+        role={role}
+        fullName={fullName.trim()}
+        loading={loading}
+        actionType="register"
+        onConfirm={() => executeRegister(email.trim().toLowerCase(), '')}
+        onCancel={handleCancelConfirmation}
+      />
     </div>
   );
 };

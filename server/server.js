@@ -5,8 +5,10 @@ const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
 
-// Load environment variables
+// Load environment variables (supports local dev server/.env, root .env, and runtime cloud/Vercel environment variables)
 dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const os = require('os');
 

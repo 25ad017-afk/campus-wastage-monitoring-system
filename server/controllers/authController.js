@@ -24,6 +24,14 @@ const isGenericPublicEmail = (email) => {
   return genericDomains.some(d => lower.endsWith(d));
 };
 
+const isDemoAuthMode = () => {
+  const flag = (process.env.DEMO_AUTH_MODE || '').trim().toLowerCase();
+  if (flag === 'false' || flag === '0' || flag === 'off' || flag === 'no') {
+    return false;
+  }
+  return true;
+};
+
 class AuthController {
   /**
    * @route   POST /api/auth/send-otp
@@ -32,6 +40,14 @@ class AuthController {
    */
   static async sendOtp(req, res, next) {
     try {
+      if (isDemoAuthMode()) {
+        return ApiResponse.success(res, 'Demo Auth Mode is active. Email OTP dispatch is bypassed.', {
+          demoAuthMode: true,
+          emailConfigured: false,
+          cooldownSeconds: 0
+        }, 200);
+      }
+
       const { email, role = 'STUDENT' } = req.body;
 
       if (!email) {
@@ -105,10 +121,11 @@ class AuthController {
       }
 
       // Check if SMTP is configured
+      emailService.initTransporter();
       if (!emailService.isConfigured || !emailService.transporter) {
         return ApiResponse.error(
           res,
-          'Email service is not configured. Please configure EMAIL_USER and EMAIL_PASSWORD in server/.env.',
+          'Email service is not configured. Please configure EMAIL_USER and EMAIL_PASSWORD in environment variables.',
           503,
           { emailConfigured: false }
         );
@@ -133,7 +150,7 @@ class AuthController {
         return ApiResponse.error(
           res,
           mailResult?.error || 'Unable to send verification email. Please check your SMTP configuration.',
-          500,
+          502,
           { emailConfigured: true, error: 'SMTP_FAILED' }
         );
       }
@@ -162,12 +179,31 @@ class AuthController {
     try {
       const { email, otp, role = 'STUDENT' } = req.body;
 
-      if (!email || !otp) {
-        return ApiResponse.error(res, 'Please provide both email and verification code.', 400);
+      if (!email) {
+        return ApiResponse.error(res, 'Please provide your college email address.', 400);
       }
 
       const normalizedEmail = email.trim().toLowerCase();
       const normalizedRole = role.toUpperCase();
+
+      if (isDemoAuthMode()) {
+        let user = await UserModel.findByEmail(normalizedEmail);
+        if (user) {
+          await UserModel.markEmailVerified(user.user_id);
+        }
+        return ApiResponse.success(res, 'Email verified successfully (Demo Mode).', {
+          email: normalizedEmail,
+          role: normalizedRole,
+          verified: true,
+          demoAuthMode: true,
+          userExists: !!user
+        }, 200);
+      }
+
+      if (!otp) {
+        return ApiResponse.error(res, 'Please provide both email and verification code.', 400);
+      }
+
       const trimmedOtp = String(otp).trim();
 
       if (!/^\d{6}$/.test(trimmedOtp)) {
@@ -203,7 +239,7 @@ class AuthController {
 
   /**
    * @route   POST /api/auth/login
-   * @desc    Authenticate user with credentials & mandatory Email OTP verification
+   * @desc    Authenticate user with credentials & mandatory Email OTP verification (bypassed in DEMO_AUTH_MODE)
    * @access  Public
    */
   static async login(req, res, next) {
@@ -261,37 +297,39 @@ class AuthController {
         return ApiResponse.error(res, 'Invalid email or password credentials.', 401);
       }
 
-      // Mandatory OTP Verification Check
-      const alreadyVerified = OtpModel.consumeVerifiedStatus(normalizedEmail, normalizedRole);
-      if (!alreadyVerified) {
-        if (!otp || String(otp).trim() === '') {
-          return ApiResponse.error(
-            res,
-            'OTP verification is mandatory. Please enter the 6-digit verification code sent to your official college email.',
-            401,
-            { otpRequired: true }
-          );
-        }
+      // Mandatory OTP Verification Check (Only when DEMO_AUTH_MODE is false)
+      if (!isDemoAuthMode()) {
+        const alreadyVerified = OtpModel.consumeVerifiedStatus(normalizedEmail, normalizedRole);
+        if (!alreadyVerified) {
+          if (!otp || String(otp).trim() === '') {
+            return ApiResponse.error(
+              res,
+              'OTP verification is mandatory. Please enter the 6-digit verification code sent to your official college email.',
+              401,
+              { otpRequired: true }
+            );
+          }
 
-        const trimmedOtp = String(otp).trim();
-        if (!/^\d{6}$/.test(trimmedOtp)) {
-          return ApiResponse.error(res, 'Verification code must be a 6-digit number.', 400);
-        }
+          const trimmedOtp = String(otp).trim();
+          if (!/^\d{6}$/.test(trimmedOtp)) {
+            return ApiResponse.error(res, 'Verification code must be a 6-digit number.', 400);
+          }
 
-        const verifyRes = OtpModel.verifyOtp({
-          email: normalizedEmail,
-          inputOtp: trimmedOtp,
-          role: normalizedRole
-        });
-
-        if (!verifyRes.success) {
-          return ApiResponse.error(res, verifyRes.message || 'Invalid or expired OTP verification code.', 401, {
-            reason: verifyRes.reason
+          const verifyRes = OtpModel.verifyOtp({
+            email: normalizedEmail,
+            inputOtp: trimmedOtp,
+            role: normalizedRole
           });
-        }
 
-        // Consume verified status to prevent any replay
-        OtpModel.consumeVerifiedStatus(normalizedEmail, normalizedRole);
+          if (!verifyRes.success) {
+            return ApiResponse.error(res, verifyRes.message || 'Invalid or expired OTP verification code.', 401, {
+              reason: verifyRes.reason
+            });
+          }
+
+          // Consume verified status to prevent any replay
+          OtpModel.consumeVerifiedStatus(normalizedEmail, normalizedRole);
+        }
       }
 
       // Mark email verified in DB
@@ -303,7 +341,7 @@ class AuthController {
         staffProfile = await StaffModel.findByUserId(user.user_id);
       }
 
-      // Generate JWT only after credentials AND OTP are verified
+      // Generate JWT
       const token = generateToken(user.user_id, user.role);
 
       return ApiResponse.success(res, 'Login successful.', {
@@ -317,7 +355,8 @@ class AuthController {
           staffId: staffProfile ? staffProfile.staff_id : null,
           assignedZone: staffProfile ? staffProfile.assigned_zone : null
         },
-        token
+        token,
+        demoAuthMode: isDemoAuthMode()
       }, 200);
     } catch (error) {
       next(error);
@@ -326,7 +365,7 @@ class AuthController {
 
   /**
    * @route   POST /api/auth/register
-   * @desc    Register a new user with mandatory email verification
+   * @desc    Register a new user with mandatory email verification (bypassed in DEMO_AUTH_MODE)
    * @access  Public
    */
   static async register(req, res, next) {
@@ -367,36 +406,38 @@ class AuthController {
         return ApiResponse.error(res, 'A user with this email address already exists.', 409);
       }
 
-      // Mandatory OTP Verification Check
-      const alreadyVerified = OtpModel.consumeVerifiedStatus(normalizedEmail, normalizedRole);
-      if (!alreadyVerified) {
-        if (!otp || String(otp).trim() === '') {
-          return ApiResponse.error(
-            res,
-            'OTP verification is mandatory for registration. Please enter the 6-digit verification code sent to your official college email.',
-            400,
-            { otpRequired: true }
-          );
-        }
+      // Mandatory OTP Verification Check (Only when DEMO_AUTH_MODE is false)
+      if (!isDemoAuthMode()) {
+        const alreadyVerified = OtpModel.consumeVerifiedStatus(normalizedEmail, normalizedRole);
+        if (!alreadyVerified) {
+          if (!otp || String(otp).trim() === '') {
+            return ApiResponse.error(
+              res,
+              'OTP verification is mandatory for registration. Please enter the 6-digit verification code sent to your official college email.',
+              400,
+              { otpRequired: true }
+            );
+          }
 
-        const trimmedOtp = String(otp).trim();
-        if (!/^\d{6}$/.test(trimmedOtp)) {
-          return ApiResponse.error(res, 'Verification code must be a 6-digit number.', 400);
-        }
+          const trimmedOtp = String(otp).trim();
+          if (!/^\d{6}$/.test(trimmedOtp)) {
+            return ApiResponse.error(res, 'Verification code must be a 6-digit number.', 400);
+          }
 
-        const verifyRes = OtpModel.verifyOtp({
-          email: normalizedEmail,
-          inputOtp: trimmedOtp,
-          role: normalizedRole
-        });
-
-        if (!verifyRes.success) {
-          return ApiResponse.error(res, verifyRes.message || 'Invalid or expired OTP verification code.', 400, {
-            reason: verifyRes.reason
+          const verifyRes = OtpModel.verifyOtp({
+            email: normalizedEmail,
+            inputOtp: trimmedOtp,
+            role: normalizedRole
           });
-        }
 
-        OtpModel.consumeVerifiedStatus(normalizedEmail, normalizedRole);
+          if (!verifyRes.success) {
+            return ApiResponse.error(res, verifyRes.message || 'Invalid or expired OTP verification code.', 400, {
+              reason: verifyRes.reason
+            });
+          }
+
+          OtpModel.consumeVerifiedStatus(normalizedEmail, normalizedRole);
+        }
       }
 
       // Hash password
@@ -437,7 +478,8 @@ class AuthController {
           staffId,
           assignedZone: assignedZone || null
         },
-        token
+        token,
+        demoAuthMode: isDemoAuthMode()
       }, 201);
     } catch (error) {
       next(error);
@@ -445,33 +487,31 @@ class AuthController {
   }
 
   /**
-   * @route   GET /api/auth/me
-   * @desc    Get currently logged-in user profile
-   * @access  Private (Requires valid JWT)
-   */
-  
-  /**
    * @route   GET /api/auth/email-status
-   * @desc    Get SMTP configuration status without exposing sensitive credentials
+   * @desc    Get SMTP configuration status and Demo Auth Mode flag
    * @access  Public
    */
   static async getEmailStatus(req, res, next) {
     try {
+      const demoAuthMode = isDemoAuthMode();
       const emailStatus = emailService.getStatus();
 
-      return ApiResponse.success(res, 'Email service status retrieved.', {
+      return ApiResponse.success(res, 'Email service and auth mode status retrieved.', {
         status: emailStatus.status,
         isConfigured: emailStatus.isConfigured,
-        mode: emailStatus.isConfigured ? 'REAL_SMTP_DISPATCH' : 'UNCONFIGURED',
+        demoAuthMode,
+        mode: demoAuthMode ? 'DEMO_AUTH_MODE' : (emailStatus.isConfigured ? 'REAL_SMTP_DISPATCH' : 'UNCONFIGURED'),
         host: emailStatus.host,
         port: emailStatus.port,
         secure: emailStatus.secure,
         senderAccount: emailStatus.senderAccount,
         studentDomain: emailStatus.studentDomain,
         staffDomain: emailStatus.staffDomain,
-        instruction: emailStatus.isConfigured
-          ? 'Real Nodemailer SMTP email dispatch is active.'
-          : 'SMTP credentials are not configured. To send real OTP emails, set EMAIL_USER and EMAIL_PASSWORD in server/.env.'
+        instruction: demoAuthMode
+          ? 'DEMO AUTH MODE ACTIVE: Email OTP verification is bypassed and Google-style YES/NO confirmation is active for presentation.'
+          : (emailStatus.isConfigured
+            ? 'Real Nodemailer SMTP email dispatch is active.'
+            : 'SMTP credentials are not configured. To send real OTP emails, set EMAIL_USER and EMAIL_PASSWORD in environment variables.')
       });
     } catch (error) {
       next(error);

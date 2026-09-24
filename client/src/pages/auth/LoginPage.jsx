@@ -19,9 +19,11 @@ import {
   Check,
   Building2,
   Info,
-  Radio
+  Radio,
+  Zap
 } from 'lucide-react';
 import DemoModeModal from '../../components/common/DemoModeModal';
+import GoogleAuthConfirmModal from '../../components/common/GoogleAuthConfirmModal';
 
 const LoginPage = () => {
   const [activeRole, setActiveRole] = useState('STUDENT'); // 'STUDENT' or 'STAFF'
@@ -37,9 +39,10 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [demoModalOpen, setDemoModalOpen] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [emailStatus, setEmailStatus] = useState(null);
 
-  // Load backend email service status
+  // Load backend email service status & demo auth mode
   useEffect(() => {
     const fetchEmailStatus = async () => {
       try {
@@ -52,11 +55,16 @@ const LoginPage = () => {
     fetchEmailStatus();
   }, []);
 
+  // Determine if Demo Auth Mode is active
+  const isDemoAuth =
+    emailStatus?.demoAuthMode !== undefined
+      ? emailStatus.demoAuthMode
+      : (import.meta.env.VITE_DEMO_AUTH_MODE !== 'false');
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Cooldown timer countdown
+  // Cooldown timer countdown (for real OTP mode)
   useEffect(() => {
     let timer;
     if (cooldown > 0) {
@@ -79,7 +87,7 @@ const LoginPage = () => {
     setStatusMessage(null);
   };
 
-  // 1. Send Verification Code (OTP)
+  // 1. Send Verification Code (OTP) - Real Mode Only
   const handleSendOtp = async () => {
     setError('');
     setStatusMessage(null);
@@ -112,7 +120,7 @@ const LoginPage = () => {
     }
   };
 
-  // 2. Verify 6-digit OTP
+  // 2. Verify 6-digit OTP - Real Mode Only
   const handleVerifyOtp = async () => {
     setError('');
     setStatusMessage(null);
@@ -135,18 +143,35 @@ const LoginPage = () => {
     }
   };
 
-  // 3. Complete Sign In
-  const handleSubmit = async (e) => {
+  // 3. Initiate Sign In - Trigger YES/NO Confirmation in Demo Mode or Submit in Real Mode
+  const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
     setStatusMessage(null);
 
     const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setError('Please enter your college email address.');
+      return;
+    }
+
     if (!normalizedEmail.endsWith('@acetcbe.edu.in')) {
       setError('Please use your official ACET college email address (@acetcbe.edu.in).');
       return;
     }
 
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
+
+    // In Demo Mode: trigger the Google-style confirmation dialog ("Do you want to continue?")
+    if (isDemoAuth) {
+      setConfirmModalOpen(true);
+      return;
+    }
+
+    // In Real Mode: enforce OTP verification
     if (!otp || otp.trim().length !== 6) {
       if (!isOtpSent) {
         setError('Mandatory OTP Verification: Please click "Send Code" to receive your 6-digit verification code on your college email.');
@@ -156,10 +181,17 @@ const LoginPage = () => {
       return;
     }
 
+    executeLogin(normalizedEmail, password, activeRole, otp.trim());
+  };
+
+  // 4. Actual Login Execution (Runs when user clicks YES in confirmation dialog or submits verified OTP)
+  const executeLogin = async (loginEmail, loginPassword, loginRole, loginOtp = '') => {
     setLoading(true);
+    setError('');
 
     try {
-      const user = await login(normalizedEmail, password, activeRole, otp.trim());
+      const user = await login(loginEmail, loginPassword, loginRole, loginOtp);
+      setConfirmModalOpen(false);
       if (user.role === 'ADMIN') {
         navigate('/admin/dashboard');
       } else if (user.role === 'STAFF') {
@@ -168,12 +200,23 @@ const LoginPage = () => {
         navigate('/student/dashboard');
       }
     } catch (err) {
+      setConfirmModalOpen(false);
       setError(err.response?.data?.message || err.message || 'Authentication failed. Please verify credentials.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Cancel Handler for Google Confirmation Dialog (NO button clicked)
+  const handleCancelConfirmation = () => {
+    setConfirmModalOpen(false);
+    setStatusMessage({
+      type: 'info',
+      text: 'Authentication cancelled. You remain signed out.'
+    });
+  };
+
+  // Quick fill handler for demo presentations
   const handleQuickFill = (demoEmail, demoPassword, role) => {
     setActiveRole(role === 'ADMIN' ? 'STAFF' : role);
     setEmail(demoEmail);
@@ -184,7 +227,9 @@ const LoginPage = () => {
     setError('');
     setStatusMessage({
       type: 'success',
-      text: `Loaded credentials for ${demoEmail}. Click "Send Code" to receive your verification code on your college email.`
+      text: isDemoAuth
+        ? `Loaded credentials for ${demoEmail}. Click "Sign In" to continue.`
+        : `Loaded credentials for ${demoEmail}. Click "Send Code" to receive your verification code on your college email.`
     });
   };
 
@@ -245,23 +290,62 @@ const LoginPage = () => {
           <p style={{ color: 'var(--slate-500)', fontSize: '0.82rem', marginTop: '0.15rem' }}>
             Pollachi &bull; Kinathukadavu, Coimbatore &bull; CWMS Security
           </p>
-          {/* Email Service Mode Indicator Badge */}
-          {emailStatus && (
-            <div style={{ marginTop: '0.6rem' }}>
-              {emailStatus.isConfigured ? (
-                <span style={{ fontSize: '0.70rem', background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46', padding: '0.15rem 0.5rem', borderRadius: '12px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <Radio size={11} color="#059669" /> SMTP Real Email Active ({emailStatus.host})
-                </span>
-              ) : (
-                <span
-                  style={{ fontSize: '0.70rem', background: '#fef3c7', border: '1px solid #fde68a', color: '#92400e', padding: '0.15rem 0.5rem', borderRadius: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                  title="To send real emails to inboxes, set EMAIL_USER and EMAIL_PASSWORD in server/.env"
-                >
-                  <Info size={11} /> Safe Dev Mode (OTP logged to backend terminal)
-                </span>
-              )}
-            </div>
-          )}
+
+          {/* Mode Indicator Badge */}
+          <div style={{ marginTop: '0.6rem' }}>
+            {isDemoAuth ? (
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  background: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  color: '#1e40af',
+                  padding: '0.2rem 0.65rem',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}
+              >
+                <Sparkles size={12} color="#2563eb" /> DEMO AUTH MODE ACTIVE (Email OTP Bypassed)
+              </span>
+            ) : emailStatus?.isConfigured ? (
+              <span
+                style={{
+                  fontSize: '0.70rem',
+                  background: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  color: '#065f46',
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem'
+                }}
+              >
+                <Radio size={11} color="#059669" /> SMTP Real Email Active ({emailStatus.host})
+              </span>
+            ) : (
+              <span
+                style={{
+                  fontSize: '0.70rem',
+                  background: '#fef3c7',
+                  border: '1px solid #fde68a',
+                  color: '#92400e',
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem'
+                }}
+              >
+                <Info size={11} /> Safe Dev Mode (OTP logged to backend terminal)
+              </span>
+            )}
+          </div>
         </div>
 
         {/* ROLE SELECTION TABS */}
@@ -335,8 +419,15 @@ const LoginPage = () => {
 
         {/* Status Alert */}
         {statusMessage && (
-          <div className="alert-box alert-success" style={{ marginBottom: '1.25rem' }}>
-            <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+          <div
+            className={`alert-box ${statusMessage.type === 'info' ? 'alert-info' : 'alert-success'}`}
+            style={{ marginBottom: '1.25rem' }}
+          >
+            {statusMessage.type === 'info' ? (
+              <Info size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+            ) : (
+              <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+            )}
             <span>{statusMessage.text}</span>
           </div>
         )}
@@ -370,34 +461,36 @@ const LoginPage = () => {
                 />
               </div>
 
-              {/* Send Verification Code Button */}
-              <button
-                type="button"
-                onClick={handleSendOtp}
-                disabled={sendingOtp || cooldown > 0}
-                className="btn btn-secondary btn-sm"
-                style={{
-                  whiteSpace: 'nowrap',
-                  fontSize: '0.78rem',
-                  padding: '0 0.85rem',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  fontWeight: 600
-                }}
-              >
-                {sendingOtp ? (
-                  <>
-                    <RefreshCw size={13} className="animate-spin" /> Sending...
-                  </>
-                ) : cooldown > 0 ? (
-                  <>Resend ({cooldown}s)</>
-                ) : (
-                  <>
-                    <Send size={13} /> Send Code
-                  </>
-                )}
-              </button>
+              {/* Send Verification Code Button - SHOWN ONLY IN REAL MODE */}
+              {!isDemoAuth && (
+                <button
+                  type="button"
+                  onClick={handleSendOtp}
+                  disabled={sendingOtp || cooldown > 0}
+                  className="btn btn-secondary btn-sm"
+                  style={{
+                    whiteSpace: 'nowrap',
+                    fontSize: '0.78rem',
+                    padding: '0 0.85rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    fontWeight: 600
+                  }}
+                >
+                  {sendingOtp ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin" /> Sending...
+                    </>
+                  ) : cooldown > 0 ? (
+                    <>Resend ({cooldown}s)</>
+                  ) : (
+                    <>
+                      <Send size={13} /> Send Code
+                    </>
+                  )}
+                </button>
+              )}
             </div>
             <div className="form-hint">
               {activeRole === 'STUDENT' 
@@ -406,8 +499,8 @@ const LoginPage = () => {
             </div>
           </div>
 
-          {/* OTP Verification Flow Section */}
-          {isOtpSent && (
+          {/* OTP Verification Flow Section - SHOWN ONLY IN REAL MODE */}
+          {!isDemoAuth && isOtpSent && (
             <div
               style={{
                 background: 'var(--slate-50)',
@@ -613,6 +706,17 @@ const LoginPage = () => {
           )}
         </div>
       </div>
+
+      {/* Google-Style Confirmation Dialog for Demo Mode Authentication */}
+      <GoogleAuthConfirmModal
+        isOpen={confirmModalOpen}
+        email={email.trim().toLowerCase()}
+        role={activeRole}
+        loading={loading}
+        actionType="login"
+        onConfirm={() => executeLogin(email.trim().toLowerCase(), password, activeRole, '')}
+        onCancel={handleCancelConfirmation}
+      />
 
       {/* Demo Mode Modal Dialog */}
       <DemoModeModal isOpen={demoModalOpen} onClose={() => setDemoModalOpen(false)} />

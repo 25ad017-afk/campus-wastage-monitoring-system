@@ -266,11 +266,14 @@ class AdminController {
   static async getSmtpStatus(req, res, next) {
     try {
       const isConfigured = emailService.isConfigured;
-      const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
-      const port = parseInt(process.env.EMAIL_PORT || '587', 10);
+      const host = (process.env.EMAIL_HOST || 'smtp.gmail.com').trim();
+      const defaultPort = (host === 'smtp.gmail.com') ? 465 : 587;
+      const port = parseInt(process.env.EMAIL_PORT || defaultPort, 10);
       const user = (process.env.EMAIL_USER || '').trim();
       const from = (process.env.EMAIL_FROM || user || '').trim();
-      const secure = process.env.EMAIL_SECURE === 'true' || port === 465;
+      const secure = process.env.EMAIL_SECURE !== undefined
+        ? (process.env.EMAIL_SECURE === 'true' || process.env.EMAIL_SECURE === '1')
+        : (port === 465 || host === 'smtp.gmail.com');
 
       // Mask user email for privacy (never expose password)
       let maskedUser = 'Not configured';
