@@ -40,6 +40,20 @@ export const AuthProvider = ({ children }) => {
     throw new Error(result.message || 'Login failed');
   };
 
+  // Google Sign-In handler
+  const googleLogin = async (credential, role = 'STUDENT') => {
+    const result = await authService.googleLogin(credential, role);
+    if (result.success && result.data) {
+      const { user: userData, token: jwtToken } = result.data;
+      setUser(userData);
+      setToken(jwtToken);
+      localStorage.setItem('cwms_token', jwtToken);
+      localStorage.setItem('cwms_user', JSON.stringify(userData));
+      return userData;
+    }
+    throw new Error(result.message || 'Google authentication failed');
+  };
+
   // Register handler
   const register = async (formData) => {
     const result = await authService.register(formData);
@@ -71,6 +85,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user,
         role: user ? user.role : null,
         login,
+        googleLogin,
         register,
         logout
       }}

@@ -1,6 +1,12 @@
 import api from './api';
 
 export const authService = {
+  // Official Google Identity / OAuth authentication
+  googleLogin: async (credential, role = 'STUDENT') => {
+    const response = await api.post('/auth/google', { credential, role });
+    return response.data;
+  },
+
   // Send 6-digit OTP verification email
   sendOtp: async (email, role = 'STUDENT') => {
     const response = await api.post('/auth/send-otp', { email, role });

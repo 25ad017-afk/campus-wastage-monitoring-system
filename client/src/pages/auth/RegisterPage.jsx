@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authService } from '../../services/authService';
 import {
   AlertCircle,
   CheckCircle2,
@@ -12,15 +11,11 @@ import {
   GraduationCap,
   HardHat,
   ShieldCheck,
-  Send,
-  KeyRound,
-  RefreshCw,
-  Check,
+  Building2,
   Sparkles,
-  Info,
-  Radio
+  Info
 } from 'lucide-react';
-import GoogleAuthConfirmModal from '../../components/common/GoogleAuthConfirmModal';
+import GoogleSignInButton from '../../components/common/GoogleSignInButton';
 
 const RegisterPage = () => {
   const [role, setRole] = useState('STUDENT');
@@ -30,95 +25,12 @@ const RegisterPage = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [employeeCode, setEmployeeCode] = useState('');
   const [assignedZone, setAssignedZone] = useState('');
-
-  const [otp, setOtp] = useState('');
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [isOtpVerified, setIsOtpVerified] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
-  const [sendingOtp, setSendingOtp] = useState(false);
-  const [verifyingOtp, setVerifyingOtp] = useState(false);
-  const [statusMessage, setStatusMessage] = useState(null);
-
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [emailStatus, setEmailStatus] = useState(null);
-
-  // Load backend email service status & demo auth mode
-  useEffect(() => {
-    const fetchEmailStatus = async () => {
-      try {
-        const res = await authService.getEmailStatus();
-        if (res.data) {
-          setEmailStatus(res.data);
-        }
-      } catch (e) {}
-    };
-    fetchEmailStatus();
-  }, []);
-
-  const isDemoAuth =
-    emailStatus?.demoAuthMode !== undefined
-      ? emailStatus.demoAuthMode
-      : (import.meta.env.VITE_DEMO_AUTH_MODE !== 'false');
+  const [statusMessage, setStatusMessage] = useState(null);
 
   const { register } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    let timer;
-    if (cooldown > 0) {
-      timer = setInterval(() => setCooldown((prev) => prev - 1), 1000);
-    }
-    return () => clearInterval(timer);
-  }, [cooldown]);
-
-  const handleSendOtp = async () => {
-    setError('');
-    setStatusMessage(null);
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail) {
-      setError('Please enter your college email address first.');
-      return;
-    }
-    if (!normalizedEmail.endsWith('@acetcbe.edu.in')) {
-      setError('Please use your official ACET college email address (@acetcbe.edu.in).');
-      return;
-    }
-    setSendingOtp(true);
-    try {
-      const res = await authService.sendOtp(normalizedEmail, role);
-      setIsOtpSent(true);
-      setCooldown(res.data?.cooldownSeconds || 60);
-      setStatusMessage({
-        type: 'success',
-        text: res.message || 'Verification code sent successfully to your official college email.'
-      });
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to send verification code.');
-    } finally {
-      setSendingOtp(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    setError('');
-    setStatusMessage(null);
-    if (!otp || otp.trim().length !== 6) {
-      setError('Please enter the 6-digit verification code.');
-      return;
-    }
-    setVerifyingOtp(true);
-    try {
-      await authService.verifyOtp(email.trim().toLowerCase(), otp.trim(), role);
-      setIsOtpVerified(true);
-      setStatusMessage({ type: 'success', text: 'Email verified successfully! You can now submit registration.' });
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Invalid verification code.');
-    } finally {
-      setVerifyingOtp(false);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -139,26 +51,7 @@ const RegisterPage = () => {
       return;
     }
 
-    if (isDemoAuth) {
-      setConfirmModalOpen(true);
-      return;
-    }
-
-    if (!otp || otp.trim().length !== 6) {
-      if (!isOtpSent) {
-        setError('Mandatory OTP Verification: Please click "Send Code" to receive your 6-digit verification code on your college email.');
-      } else {
-        setError('Mandatory OTP Verification: Please enter the 6-digit verification code sent to your official college email.');
-      }
-      return;
-    }
-
-    executeRegister(normalizedEmail, otp.trim());
-  };
-
-  const executeRegister = async (normalizedEmail, registerOtp = '') => {
     setLoading(true);
-    setError('');
     try {
       const userData = {
         fullName: fullName.trim(),
@@ -167,11 +60,9 @@ const RegisterPage = () => {
         role,
         phoneNumber: phoneNumber || null,
         employeeCode: role === 'STAFF' ? employeeCode : undefined,
-        assignedZone: role === 'STAFF' ? assignedZone : undefined,
-        otp: registerOtp
+        assignedZone: role === 'STAFF' ? assignedZone : undefined
       };
       const user = await register(userData);
-      setConfirmModalOpen(false);
       if (user.role === 'ADMIN') {
         navigate('/admin/dashboard');
       } else if (user.role === 'STAFF') {
@@ -180,19 +71,10 @@ const RegisterPage = () => {
         navigate('/student/dashboard');
       }
     } catch (err) {
-      setConfirmModalOpen(false);
       setError(err.response?.data?.message || err.message || 'Registration failed. Please verify credentials.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCancelConfirmation = () => {
-    setConfirmModalOpen(false);
-    setStatusMessage({
-      type: 'info',
-      text: 'Registration cancelled. Account has not been created.'
-    });
   };
 
   return (
@@ -241,45 +123,6 @@ const RegisterPage = () => {
           <p style={{ color: 'var(--slate-500)', fontSize: '0.82rem', marginTop: '0.15rem' }}>
             Pollachi &bull; CWMS Campus Sanitation &amp; Waste Management
           </p>
-
-          {/* Mode Indicator Badge */}
-          <div style={{ marginTop: '0.6rem' }}>
-            {isDemoAuth ? (
-              <span
-                style={{
-                  fontSize: '0.72rem',
-                  background: '#eff6ff',
-                  border: '1px solid #bfdbfe',
-                  color: '#1e40af',
-                  padding: '0.2rem 0.65rem',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem'
-                }}
-              >
-                <Sparkles size={12} color="#2563eb" /> DEMO AUTH MODE ACTIVE (Email OTP Bypassed)
-              </span>
-            ) : (
-              <span
-                style={{
-                  fontSize: '0.70rem',
-                  background: '#ecfdf5',
-                  border: '1px solid #a7f3d0',
-                  color: '#065f46',
-                  padding: '0.15rem 0.5rem',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.25rem'
-                }}
-              >
-                <Radio size={11} color="#059669" /> SMTP Real Email Active
-              </span>
-            )}
-          </div>
         </div>
 
         {error && (
@@ -294,14 +137,39 @@ const RegisterPage = () => {
             className={`alert-box ${statusMessage.type === 'info' ? 'alert-info' : 'alert-success'}`}
             style={{ marginBottom: '1.25rem' }}
           >
-            {statusMessage.type === 'info' ? (
-              <Info size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-            ) : (
-              <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-            )}
+            <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
             <span>{statusMessage.text}</span>
           </div>
         )}
+
+        {/* OFFICIAL GOOGLE SIGN-IN FOR INSTANT ACET ONBOARDING */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <GoogleSignInButton
+            role={role}
+            onError={(msg) => setError(msg)}
+            onSuccess={() => {
+              setError('');
+              setStatusMessage({ type: 'success', text: 'Google authentication verified.' });
+            }}
+          />
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              margin: '1.25rem 0 1rem',
+              color: 'var(--slate-400)',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em'
+            }}
+          >
+            <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+            <span style={{ padding: '0 0.75rem' }}>or register with credentials</span>
+            <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -356,70 +224,21 @@ const RegisterPage = () => {
 
           <div className="form-group">
             <label className="form-label" htmlFor="email">Official College Email Address</label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <div style={{ position: 'relative', flex: 1 }}>
-                <input
-                  id="email"
-                  type="email"
-                  className="input-field"
-                  placeholder="e.g. priya.student@acetcbe.edu.in"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setIsOtpVerified(false);
-                  }}
-                  required
-                  style={{ paddingLeft: '2.4rem' }}
-                />
-                <Mail size={16} color="var(--slate-400)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
-              </div>
-
-              {!isDemoAuth && (
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
-                  disabled={sendingOtp || cooldown > 0}
-                  className="btn btn-secondary btn-sm"
-                  style={{ whiteSpace: 'nowrap', fontSize: '0.78rem', padding: '0 0.85rem' }}
-                >
-                  {sendingOtp ? <RefreshCw size={13} className="animate-spin" /> : cooldown > 0 ? ('Resend (' + cooldown + 's)') : <><Send size={13} /> Send Code</>}
-                </button>
-              )}
+            <div style={{ position: 'relative' }}>
+              <input
+                id="email"
+                type="email"
+                className="input-field"
+                placeholder="e.g. priya.student@acetcbe.edu.in"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                style={{ paddingLeft: '2.4rem' }}
+              />
+              <Mail size={16} color="var(--slate-400)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
             </div>
             <div className="form-hint">Accepted official domain: @acetcbe.edu.in</div>
           </div>
-
-          {!isDemoAuth && isOtpSent && (
-            <div style={{ background: 'var(--slate-50)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1rem', marginBottom: '1.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                <label className="form-label" style={{ margin: 0, fontSize: '0.82rem' }}>6-Digit Verification Code</label>
-                {isOtpVerified && <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 700 }}><Check size={14} /> Verified</span>}
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    className="input-field"
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                    style={{ paddingLeft: '2.4rem', letterSpacing: '0.2em', fontFamily: 'monospace', fontWeight: 700 }}
-                  />
-                  <KeyRound size={16} color="var(--slate-400)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleVerifyOtp}
-                  disabled={verifyingOtp || isOtpVerified || otp.length !== 6}
-                  className="btn btn-primary btn-sm"
-                  style={{ whiteSpace: 'nowrap', fontSize: '0.78rem' }}
-                >
-                  {verifyingOtp ? 'Verifying...' : isOtpVerified ? 'Verified' : 'Verify Code'}
-                </button>
-              </div>
-            </div>
-          )}
 
           <div className="form-group">
             <label className="form-label" htmlFor="password">Security Password</label>
@@ -508,18 +327,6 @@ const RegisterPage = () => {
           </Link>
         </div>
       </div>
-
-      {/* Google-Style Confirmation Dialog for Demo Mode Registration */}
-      <GoogleAuthConfirmModal
-        isOpen={confirmModalOpen}
-        email={email.trim().toLowerCase()}
-        role={role}
-        fullName={fullName.trim()}
-        loading={loading}
-        actionType="register"
-        onConfirm={() => executeRegister(email.trim().toLowerCase(), '')}
-        onCancel={handleCancelConfirmation}
-      />
     </div>
   );
 };

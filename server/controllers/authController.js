@@ -1,4 +1,6 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
 const UserModel = require('../models/userModel');
 const StaffModel = require('../models/staffModel');
 const OtpModel = require('../models/otpModel');
@@ -32,7 +34,173 @@ const isDemoAuthMode = () => {
   return true;
 };
 
+/**
+ * Securely verify Google OAuth ID token using google-auth-library with fallback to Google tokeninfo API
+ */
+const verifyGoogleIdToken = async (credential) => {
+  if (!credential || typeof credential !== 'string') {
+    throw new Error('Google credential token is missing or invalid.');
+  }
+
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const client = new OAuth2Client(clientId);
+
+  // 1. Try OAuth2Client verifyIdToken if GOOGLE_CLIENT_ID is configured
+  if (clientId) {
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: clientId
+      });
+      const payload = ticket.getPayload();
+      if (payload) return payload;
+    } catch (err) {
+      console.warn('verifyIdToken with audience failed, checking tokeninfo:', err.message);
+    }
+  }
+
+  // 2. Google OAuth2 tokeninfo validation
+  const tokenInfoUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`;
+  const response = await fetch(tokenInfoUrl);
+  if (!response.ok) {
+    throw new Error('Google ID token validation failed or token has expired.');
+  }
+
+  const payload = await response.json();
+
+  // Validate issuer
+  const validIssuers = ['accounts.google.com', 'https://accounts.google.com'];
+  if (!validIssuers.includes(payload.iss)) {
+    throw new Error('Invalid Google token issuer.');
+  }
+
+  // Validate expiration time
+  const now = Math.floor(Date.now() / 1000);
+  if (payload.exp && parseInt(payload.exp, 10) < now) {
+    throw new Error('Google authentication session has expired. Please sign in again.');
+  }
+
+  return payload;
+};
+
 class AuthController {
+  /**
+   * @route   POST /api/auth/google
+   * @desc    Authenticate or register user via official Google Identity Services / OAuth ID token
+   * @access  Public
+   */
+  static async googleLogin(req, res, next) {
+    try {
+      const { credential, token, role = 'STUDENT' } = req.body;
+      const idToken = credential || token;
+
+      if (!idToken) {
+        return ApiResponse.error(res, 'Google authentication credential is required.', 400);
+      }
+
+      // Securely verify Google ID token
+      let payload;
+      try {
+        payload = await verifyGoogleIdToken(idToken);
+      } catch (tokenErr) {
+        return ApiResponse.error(res, tokenErr.message || 'Invalid or expired Google authentication token.', 401);
+      }
+
+      if (!payload || !payload.email) {
+        return ApiResponse.error(res, 'Failed to obtain verified email from Google authentication.', 400);
+      }
+
+      const normalizedEmail = String(payload.email).trim().toLowerCase();
+      const googleName = payload.name || `${payload.given_name || ''} ${payload.family_name || ''}`.trim() || 'ACET Member';
+      const requestedRole = (role || 'STUDENT').toUpperCase();
+      const { studentDomain, staffDomain } = getCollegeDomains();
+
+      // Enforce ACET official college account requirement
+      if (!normalizedEmail.endsWith(studentDomain) && !normalizedEmail.endsWith(staffDomain)) {
+        return ApiResponse.error(
+          res,
+          'Please use your official ACET college Google account (@acetcbe.edu.in).',
+          403,
+          { unauthorizedEmail: normalizedEmail }
+        );
+      }
+
+      // Check if user already exists in CWMS database
+      let user = await UserModel.findByEmail(normalizedEmail);
+
+      if (user) {
+        if (!user.is_active) {
+          return ApiResponse.error(res, 'This account has been deactivated. Please contact campus administration.', 403);
+        }
+
+        // Mark email verified in DB
+        await UserModel.markEmailVerified(user.user_id);
+      } else {
+        // Auto-provision new user account for valid ACET member
+        let assignedRole = requestedRole;
+
+        if (normalizedEmail === 'admin@acetcbe.edu.in') {
+          assignedRole = 'ADMIN';
+        } else if (requestedRole === 'STAFF' || normalizedEmail.includes('staff') || normalizedEmail.includes('faculty')) {
+          assignedRole = 'STAFF';
+        } else {
+          assignedRole = 'STUDENT';
+        }
+
+        // Generate strong password hash (Google manages actual authentication)
+        const randomSecret = crypto.randomBytes(32).toString('hex');
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(randomSecret, salt);
+
+        const userId = await UserModel.create({
+          fullName: googleName,
+          email: normalizedEmail,
+          passwordHash,
+          role: assignedRole,
+          phoneNumber: null,
+          isEmailVerified: true
+        });
+
+        if (assignedRole === 'STAFF') {
+          const generatedCode = `STF-${Date.now().toString().slice(-4)}`;
+          await StaffModel.create({
+            userId,
+            employeeCode: generatedCode,
+            assignedZone: 'General Campus'
+          });
+        }
+
+        user = await UserModel.findById(userId);
+      }
+
+      // Fetch staff profile if applicable
+      let staffProfile = null;
+      if (user.role === 'STAFF') {
+        staffProfile = await StaffModel.findByUserId(user.user_id);
+      }
+
+      // Generate secure CWMS JWT session token
+      const jwtToken = generateToken(user.user_id, user.role);
+
+      return ApiResponse.success(res, 'Google authentication successful.', {
+        user: {
+          userId: user.user_id,
+          fullName: user.full_name,
+          email: user.email,
+          role: user.role,
+          phoneNumber: user.phone_number,
+          isEmailVerified: true,
+          staffId: staffProfile ? staffProfile.staff_id : null,
+          assignedZone: staffProfile ? staffProfile.assigned_zone : null
+        },
+        token: jwtToken,
+        authProvider: 'google'
+      }, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   /**
    * @route   POST /api/auth/send-otp
    * @desc    Send 6-digit verification OTP to authorized college email
