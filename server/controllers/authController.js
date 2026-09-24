@@ -655,6 +655,23 @@ class AuthController {
   }
 
   /**
+   * @route   GET /api/auth/google-client-id
+   * @desc    Get configured public Google OAuth Client ID
+   * @access  Public
+   */
+  static async getGoogleClientId(req, res, next) {
+    try {
+      const googleClientId = (process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '').trim();
+      return ApiResponse.success(res, 'Google OAuth Client ID retrieved.', {
+        googleClientId,
+        isConfigured: !!(googleClientId && !googleClientId.includes('example'))
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * @route   GET /api/auth/email-status
    * @desc    Get SMTP configuration status and Demo Auth Mode flag
    * @access  Public
@@ -663,6 +680,7 @@ class AuthController {
     try {
       const demoAuthMode = isDemoAuthMode();
       const emailStatus = emailService.getStatus();
+      const googleClientId = (process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '').trim();
 
       return ApiResponse.success(res, 'Email service and auth mode status retrieved.', {
         status: emailStatus.status,
@@ -675,8 +693,10 @@ class AuthController {
         senderAccount: emailStatus.senderAccount,
         studentDomain: emailStatus.studentDomain,
         staffDomain: emailStatus.staffDomain,
+        googleClientId,
+        isGoogleConfigured: !!(googleClientId && !googleClientId.includes('example')),
         instruction: demoAuthMode
-          ? 'DEMO AUTH MODE ACTIVE: Email OTP verification is bypassed and Google-style YES/NO confirmation is active for presentation.'
+          ? 'DEMO AUTH MODE ACTIVE: Email OTP verification is bypassed and instant authentication is active.'
           : (emailStatus.isConfigured
             ? 'Real Nodemailer SMTP email dispatch is active.'
             : 'SMTP credentials are not configured. To send real OTP emails, set EMAIL_USER and EMAIL_PASSWORD in environment variables.')

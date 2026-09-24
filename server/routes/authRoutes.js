@@ -7,6 +7,7 @@ const ApiResponse = require('../utils/apiResponse');
 
 // Public Authentication & Email Verification Routes
 router.post('/google', AuthController.googleLogin);
+router.get('/google-client-id', AuthController.getGoogleClientId);
 router.post('/send-otp', AuthController.sendOtp);
 router.post('/verify-otp', AuthController.verifyOtp);
 router.post('/register', AuthController.register);
