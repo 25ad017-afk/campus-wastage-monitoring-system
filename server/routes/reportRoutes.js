@@ -59,7 +59,24 @@ router.patch(
   ReportController.updateReportStatus
 );
 
-// 6. Delete report (Admin, or Reporter if status is still 'REPORTED')
+// 6. Public Action Confirmation from Email YES/NO Buttons (Secured with HMAC Token)
+router.get(
+  '/:id/action-confirm',
+  ReportController.handleActionConfirmation
+);
+router.post(
+  '/:id/action-confirm',
+  ReportController.handleActionConfirmation
+);
+
+// 7. Manually or Programmatically Dispatch Action Confirmation Email
+router.post(
+  '/:id/send-confirmation',
+  verifyToken,
+  ReportController.sendActionConfirmation
+);
+
+// 8. Delete report (Admin, or Reporter if status is still 'REPORTED')
 router.delete(
   '/:id',
   verifyToken,

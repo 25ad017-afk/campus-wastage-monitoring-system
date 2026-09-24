@@ -4,8 +4,236 @@ const os = require('os');
 const ReportModel = require('../models/reportModel');
 const NotificationModel = require('../models/notificationModel');
 const ApiResponse = require('../utils/apiResponse');
+const emailService = require('../services/emailService');
 
 class ReportController {
+  /**
+   * Helper: Resolve base URL for email action links and redirects
+   */
+  static getBaseUrl(req) {
+    if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, '');
+    if (process.env.CLIENT_URL) return process.env.CLIENT_URL.replace(/\/$/, '');
+    const forwardedHost = req.headers['x-forwarded-host'] || req.headers.host;
+    const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http').split(',')[0].trim();
+    if (forwardedHost) return `${proto}://${forwardedHost}`.replace(/\/$/, '');
+    return 'https://campus-wastage-monitoring-system.vercel.app';
+  }
+
+  /**
+   * Helper: Render a clean, modern HTML confirmation page for email YES/NO clicks
+   */
+  static renderActionConfirmationHtml({ isSuccess, action, ticketCode, buildingName, status, message, baseUrl }) {
+    const isYes = action === 'YES';
+    const accentColor = isYes ? '#10b981' : '#ef4444';
+    const accentGradient = isYes ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+    const actionBadge = isYes ? 'CONFIRMED — YES' : 'DECLINED — NO';
+    const actionIcon = isYes
+      ? '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
+      : '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Waste Monitoring System — Action Confirmation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #090d16;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, ${isYes ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'} 0%, rgba(0,0,0,0) 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 540px;
+      background: rgba(18, 24, 38, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 40px 32px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      text-align: center;
+      animation: fadeIn 0.4s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .badge-header {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .icon-wrapper {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background: ${accentGradient};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      box-shadow: 0 10px 25px -5px ${isYes ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'};
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      background: ${accentColor};
+      margin-bottom: 16px;
+    }
+    .message {
+      font-size: 15px;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .details-box {
+      background: rgba(10, 14, 23, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+    .details-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .details-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .details-label {
+      color: #64748b;
+      font-weight: 500;
+    }
+    .details-value {
+      color: #f1f5f9;
+      font-weight: 700;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      color: #ffffff;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 25px -5px rgba(37, 99, 235, 0.5);
+    }
+    .footer {
+      margin-top: 24px;
+      font-size: 11px;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge-header">
+      <span>🌱</span> Campus Waste Monitoring System
+    </div>
+    <div class="icon-wrapper">
+      ${actionIcon}
+    </div>
+    <h1>${isYes ? 'Action Confirmed' : 'Action Declined'}</h1>
+    <div class="status-pill">${actionBadge}</div>
+    <p class="message">${message}</p>
+    
+    <div class="details-box">
+      <div class="details-row">
+        <span class="details-label">Ticket Code</span>
+        <span class="details-value">${ticketCode || 'N/A'}</span>
+      </div>
+      <div class="details-row">
+        <span class="details-label">Location</span>
+        <span class="details-value">${buildingName || 'Campus Facility'}</span>
+      </div>
+      <div class="details-row">
+        <span class="details-label">Current Status</span>
+        <span class="details-value" style="color: ${accentColor}">${status || (isYes ? 'IN_PROGRESS' : 'REJECTED')}</span>
+      </div>
+      <div class="details-row">
+        <span class="details-label">Recorded At</span>
+        <span class="details-value">${new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+      </div>
+    </div>
+
+    <a href="${baseUrl}/" class="btn">
+      <span>Open CWMS Dashboard</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+    </a>
+
+    <div class="footer">
+      Akshaya College of Engineering & Technology — CWMS Security Engine
+    </div>
+  </div>
+</body>
+</html>`;
+  }
+
   /**
    * @route   POST /api/reports
    * @desc    Create a new waste incident report with an image
@@ -126,12 +354,237 @@ class ReportController {
         console.warn('Notification dispatch non-critical error:', notifErr.message);
       }
 
+      // 10. Automatically send interactive Action Confirmation Email (with YES and NO options)
+      try {
+        const baseUrl = ReportController.getBaseUrl(req);
+        const recipientEmail = req.user.email || createdReport?.reporter_email;
+        const recipientName = req.user.fullName || createdReport?.reporter_name || 'Campus Member';
+
+        if (recipientEmail) {
+          emailService.sendActionConfirmationEmail({
+            to: recipientEmail,
+            recipientName,
+            report: createdReport,
+            actionType: 'NEW_REPORT',
+            baseUrl
+          }).catch(err => console.warn('Action confirmation email delivery non-critical warning:', err.message));
+        }
+      } catch (emailErr) {
+        console.warn('Action confirmation email dispatch error:', emailErr.message);
+      }
+
       return ApiResponse.success(res, 'Waste incident reported successfully.', createdReport, 201);
     } catch (error) {
       // Clean up file if unexpected error occurs
       if (req.file && req.file.path && fs.existsSync(req.file.path)) {
         try { fs.unlinkSync(req.file.path); } catch (e) {}
       }
+      next(error);
+    }
+  }
+
+  /**
+   * @route   GET|POST /api/reports/:id/action-confirm
+   * @desc    Handle functional YES / NO action confirmation from email buttons or web requests
+   * @access  Public (Secured with HMAC cryptographic token)
+   */
+  static async handleActionConfirmation(req, res, next) {
+    try {
+      const { id } = req.params;
+      const action = (req.query.action || req.body.action || '').toUpperCase().trim();
+      const token = req.query.token || req.body.token;
+      const email = (req.query.email || req.body.email || '').trim();
+      const baseUrl = ReportController.getBaseUrl(req);
+
+      // 1. Validate action parameter
+      if (!['YES', 'NO'].includes(action)) {
+        const html = ReportController.renderActionConfirmationHtml({
+          isSuccess: false,
+          action: 'INVALID',
+          ticketCode: 'N/A',
+          buildingName: 'N/A',
+          status: 'ERROR',
+          message: 'Invalid action parameter. Expected action=YES or action=NO.',
+          baseUrl
+        });
+        if (req.headers.accept?.includes('application/json') && !req.query.format?.includes('html')) {
+          return ApiResponse.error(res, 'Invalid action parameter. Must be YES or NO.', 400);
+        }
+        return res.status(400).send(html);
+      }
+
+      // 2. Fetch the waste report
+      const report = await ReportModel.findById(id);
+      if (!report) {
+        const html = ReportController.renderActionConfirmationHtml({
+          isSuccess: false,
+          action,
+          ticketCode: 'N/A',
+          buildingName: 'N/A',
+          status: 'NOT_FOUND',
+          message: `The waste management request with ID #${id} was not found or has been removed.`,
+          baseUrl
+        });
+        if (req.headers.accept?.includes('application/json') && !req.query.format?.includes('html')) {
+          return ApiResponse.error(res, 'Waste report not found.', 404);
+        }
+        return res.status(404).send(html);
+      }
+
+      // 3. Verify security token (HMAC-SHA256 signature verification)
+      const isTokenValid = emailService.verifyActionToken(id, email, token);
+      if (!isTokenValid) {
+        const html = ReportController.renderActionConfirmationHtml({
+          isSuccess: false,
+          action,
+          ticketCode: report.ticket_code,
+          buildingName: report.building_name,
+          status: 'UNAUTHORIZED',
+          message: 'Invalid or expired confirmation security token. Please use the original link from your email.',
+          baseUrl
+        });
+        if (req.headers.accept?.includes('application/json') && !req.query.format?.includes('html')) {
+          return ApiResponse.error(res, 'Invalid or expired action confirmation security token.', 403);
+        }
+        return res.status(403).send(html);
+      }
+
+      // 4. Update status in Database based on YES or NO
+      let updatedStatus = report.status;
+      let confirmationMessage = '';
+
+      if (action === 'YES') {
+        // If user confirms YES:
+        // Transition REPORTED / ASSIGNED → IN_PROGRESS
+        if (report.status === 'REPORTED' || report.status === 'ASSIGNED') {
+          updatedStatus = 'IN_PROGRESS';
+          await ReportModel.updateStatus(id, 'IN_PROGRESS');
+        } else if (report.status === 'REJECTED') {
+          updatedStatus = 'IN_PROGRESS';
+          await ReportModel.updateStatus(id, 'IN_PROGRESS');
+        }
+        confirmationMessage = `Thank you! Your confirmation (YES) for waste management request #${report.ticket_code} has been recorded. The status is now set to ${updatedStatus}.`;
+
+        // Create in-app notification
+        try {
+          if (report.reporter_id) {
+            NotificationModel.create({
+              recipientId: report.reporter_id,
+              reportId: parseInt(id, 10),
+              title: 'Action Confirmed (YES)',
+              message: `Waste management request #${report.ticket_code} at ${report.building_name} was confirmed. Status: ${updatedStatus}.`,
+              type: 'STATUS_UPDATE'
+            });
+          }
+        } catch (notifErr) {
+          console.warn('Action notification error:', notifErr.message);
+        }
+      } else {
+        // If user confirms NO:
+        // Transition to REJECTED / CANCELLED
+        updatedStatus = 'REJECTED';
+        await ReportModel.updateStatus(id, 'REJECTED');
+        confirmationMessage = `Your response (NO) for waste management request #${report.ticket_code} has been recorded. The request has been declined/cancelled.`;
+
+        // Create in-app notification
+        try {
+          if (report.reporter_id) {
+            NotificationModel.create({
+              recipientId: report.reporter_id,
+              reportId: parseInt(id, 10),
+              title: 'Action Declined (NO)',
+              message: `Waste management request #${report.ticket_code} was declined and marked as REJECTED.`,
+              type: 'STATUS_UPDATE'
+            });
+          }
+        } catch (notifErr) {
+          console.warn('Action notification error:', notifErr.message);
+        }
+      }
+
+      // 5. Fetch fresh report object
+      const freshReport = await ReportModel.findById(id);
+
+      // 6. Return response (HTML for web browser link clicks, JSON for API clients)
+      const acceptsJson = req.headers.accept?.includes('application/json') && !req.query.format?.includes('html');
+      if (acceptsJson) {
+        return ApiResponse.success(res, confirmationMessage, {
+          reportId: parseInt(id, 10),
+          ticketCode: freshReport?.ticket_code || report.ticket_code,
+          action,
+          status: updatedStatus,
+          message: confirmationMessage,
+          updatedAt: new Date().toISOString()
+        });
+      }
+
+      const htmlResponse = ReportController.renderActionConfirmationHtml({
+        isSuccess: true,
+        action,
+        ticketCode: freshReport?.ticket_code || report.ticket_code,
+        buildingName: freshReport?.building_name || report.building_name,
+        status: updatedStatus,
+        message: confirmationMessage,
+        baseUrl
+      });
+
+      return res.status(200).send(htmlResponse);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * @route   POST /api/reports/:id/send-confirmation
+   * @desc    Manually or programmatically trigger an action confirmation email with YES/NO buttons
+   * @access  Private (Authenticated users: Owner, Staff, Admin)
+   */
+  static async sendActionConfirmation(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { targetEmail, recipientName, actionType = 'CONFIRMATION_REQUEST' } = req.body;
+
+      const report = await ReportModel.findById(id);
+      if (!report) {
+        return ApiResponse.error(res, 'Waste report not found.', 404);
+      }
+
+      // Authorization: Admin, Staff, or Reporter
+      const isAdmin = req.user.role === 'ADMIN';
+      const isStaff = req.user.role === 'STAFF';
+      const isOwner = report.reporter_id === req.user.userId;
+
+      if (!isAdmin && !isStaff && !isOwner) {
+        return ApiResponse.error(res, 'Access denied. You do not have permission to trigger confirmation for this report.', 403);
+      }
+
+      const recipient = targetEmail || report.reporter_email || req.user.email;
+      const name = recipientName || report.reporter_name || req.user.fullName || 'Campus Member';
+      const baseUrl = ReportController.getBaseUrl(req);
+
+      const emailResult = await emailService.sendActionConfirmationEmail({
+        to: recipient,
+        recipientName: name,
+        report,
+        actionType,
+        baseUrl
+      });
+
+      const token = emailService.generateActionToken(report.report_id, recipient);
+      const yesUrl = `${baseUrl}/api/reports/${report.report_id}/action-confirm?action=YES&token=${token}&email=${encodeURIComponent(recipient)}`;
+      const noUrl = `${baseUrl}/api/reports/${report.report_id}/action-confirm?action=NO&token=${token}&email=${encodeURIComponent(recipient)}`;
+
+      return ApiResponse.success(res, `Confirmation email dispatched to ${recipient}.`, {
+        reportId: report.report_id,
+        ticketCode: report.ticket_code,
+        recipient,
+        emailResult,
+        actionUrls: {
+          yes: yesUrl,
+          no: noUrl
+        }
+      });
+    } catch (error) {
       next(error);
     }
   }

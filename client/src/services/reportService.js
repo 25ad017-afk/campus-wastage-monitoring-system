@@ -34,6 +34,21 @@ export const reportService = {
     return response.data;
   },
 
+  // Send email action confirmation request
+  sendActionConfirmation: async (reportId, payload = {}) => {
+    const response = await api.post(`/reports/${reportId}/send-confirmation`, payload);
+    return response.data;
+  },
+
+  // Execute YES/NO action confirmation
+  confirmAction: async (reportId, { action, token, email }) => {
+    const response = await api.get(`/reports/${reportId}/action-confirm`, {
+      params: { action, token, email },
+      headers: { Accept: 'application/json' }
+    });
+    return response.data;
+  },
+
   // Delete a report when authorized
   deleteReport: async (reportId) => {
     const response = await api.delete(`/reports/${reportId}`);
