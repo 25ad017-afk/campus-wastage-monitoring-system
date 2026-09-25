@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { reportService } from '../../services/reportService';
 import {
   Camera,
@@ -19,34 +19,55 @@ import {
   Sliders,
   CheckCircle,
   Info,
-  ShieldAlert
+  ShieldAlert,
+  Map
 } from 'lucide-react';
 import Loader from '../../components/common/Loader';
 
 // Official monitored campus zones for Akshaya College of Engineering and Technology (ACET)
 const MONITORED_CAMPUS_ZONES = [
+  'Main Block',
+  'A Block',
+  'B Block',
+  'C Block',
+  'D Block',
+  'E Block',
+  'Centres of Excellence',
+  'Workshop',
+  'Training Centre',
+  'Auditorium',
+  'Food Court & Amenities',
+  'Cafeteria',
+  'Boys Hostel',
+  'Girls Hostel',
+  'Recreation Center',
+  'Gym',
+  'Playground',
+  'Basketball Court',
+  'Volleyball Court',
+  'Kabaddi Court',
+  'Ball Badminton Court',
+  'Cricket Nets',
+  'Temple',
+  'ATM',
+  'Power House',
+  'Transformer',
+  'Parking',
+  'Security Gate 1',
+  'Security Gate 2',
   'Academic Area',
   'Central Library',
   'Laboratory Area',
   'Smart Classroom Area',
   'Administrative / Office Area',
-  'Conference Hall',
-  'Guest Room & TV Hall',
-  'Food Court & Amenity Center',
-  'Hostel Area',
   'Sports Area',
-  'Fitness Centre',
-  'Transport Area',
-  'Main Entrance',
-  'Campus Internal Area',
-  'Green Campus Area',
-  'Student Activity Area',
-  'Waste Collection Area',
+  'Hostel Area',
   'Other Campus Area'
 ];
 
 const CreateReportPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const fileInputRef = useRef(null);
 
   // Form State
@@ -94,6 +115,31 @@ const CreateReportPage = () => {
     };
     fetchMetadata();
   }, []);
+
+  // Pre-select location and zone from URL query parameters (e.g. from Campus Map click)
+  useEffect(() => {
+    const locParam = searchParams.get('location');
+    const zoneParam = searchParams.get('zone');
+
+    if (locParam && locations.length > 0) {
+      const targetName = locParam.toLowerCase();
+      const matched = locations.find((l) => {
+        const b = (l.building_name || '').toLowerCase();
+        const z = (l.zone_name || '').toLowerCase();
+        const f = (l.floor_or_landmark || '').toLowerCase();
+        return b === targetName || f.includes(targetName) || z === targetName || targetName.includes(b);
+      });
+
+      if (matched) {
+        setLocationId(String(matched.location_id));
+        if (matched.zone_name) {
+          setSelectedZone(matched.zone_name);
+        }
+      }
+    } else if (zoneParam && locations.length > 0) {
+      setSelectedZone(zoneParam);
+    }
+  }, [locations, searchParams]);
 
   // Trigger AI Auto-Classification from photo
   const triggerAiClassification = async (file) => {
@@ -562,9 +608,31 @@ const CreateReportPage = () => {
 
         {/* Step 2: Location Selection */}
         <div style={{ marginBottom: '2rem' }}>
-          <label className="form-label" style={{ fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <MapPin size={18} color="var(--primary)" /> 2. Campus Location &amp; Sector <span style={{ color: '#ef4444' }}>*</span>
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <label className="form-label" style={{ fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0 }}>
+              <MapPin size={18} color="var(--primary)" /> 2. Campus Location &amp; Sector <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <Link
+              to="/campus-map"
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                color: 'var(--primary)',
+                background: 'var(--primary-light)',
+                padding: '0.2rem 0.65rem',
+                borderRadius: 'var(--radius-full)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                textDecoration: 'none'
+              }}
+              title="Open Official ACET Campus Master Map in new tab"
+            >
+              <Map size={13} /> View Campus Map ↗
+            </Link>
+          </div>
 
           <div className="grid-2" style={{ marginBottom: '0.75rem' }}>
             <div>

@@ -104,7 +104,39 @@ INSERT INTO locations (location_id, zone_name, building_name, floor_or_landmark,
 (54, 'Waste Collection Area', 'Waste Collection Area', 'Waste Storage Area', 10.82470000, 77.02220000),
 
 -- 18. Other Campus Area
-(55, 'Other Campus Area', 'Other Campus Area', 'Other Location', 10.82400000, 77.02100000)
+(55, 'Other Campus Area', 'Other Campus Area', 'Other Location', 10.82400000, 77.02100000),
+
+-- 19. Official ACET Master Map Specific Blocks & Locations
+(56, 'Main Block', 'Main Block', 'Central Administration & Principal Office', 10.82600000, 77.02000000),
+(57, 'Main Block', 'Main Block', 'Reception Lobby & Board Room', 10.82610000, 77.02010000),
+(58, 'A Block', 'A Block', 'ECE Department & Central Library (Ground Floor)', 10.82680000, 77.01850000),
+(59, 'B Block', 'B Block', 'CSE Department & AI Computing Labs', 10.82700000, 77.01900000),
+(60, 'C Block', 'C Block', 'CSE Clusters & Smart Seminar Halls', 10.82720000, 77.01950000),
+(61, 'D Block', 'D Block', 'Science & Humanities (S&H) / First Year Labs', 10.82740000, 77.02020000),
+(62, 'E Block', 'E Block', 'CIVIL, MECH, EEE, MECT & CAD/CAM Labs', 10.82760000, 77.02080000),
+(63, 'Centres of Excellence', 'Centres of Excellence', 'Akshaya Thulir Pre-incubation & Research Hub', 10.82780000, 77.02150000),
+(64, 'Workshop', 'Workshop', 'Machine Shop, Foundry & Welding Units', 10.82650000, 77.01820000),
+(65, 'Training Centre', 'Training Centre', 'Placement & Corporate Training Cell', 10.82660000, 77.01880000),
+(66, 'Auditorium', 'Auditorium', 'Main Auditorium (1500+ Capacity)', 10.82650000, 77.02200000),
+(67, 'Food Court & Amenities', 'Food Court & Amenities', 'Dining Hall & Central Kitchen', 10.82680000, 77.02220000),
+(68, 'Cafeteria', 'Cafeteria', 'Cafeteria & Refreshment Kiosk', 10.82580000, 77.02050000),
+(69, 'Recreation Center', 'Recreation Center', 'Indoor Games & Student Activity Wing', 10.82520000, 77.01850000),
+(70, 'Gym', 'Gym', 'Fitness Center & Gymnasium', 10.82530000, 77.01890000),
+(71, 'Boys Hostel', 'Boys Hostel', 'Boys Hostel Residential Blocks & Mess', 10.82450000, 77.01850000),
+(72, 'Girls Hostel', 'Girls Hostel', 'Girls Hostel Residential Blocks & Mess', 10.82450000, 77.01920000),
+(73, 'Playground', 'Playground', 'Main Athletic Track & Sports Ground', 10.82550000, 77.02280000),
+(74, 'Basketball Court', 'Basketball Court', 'Outdoor Synthetic Basketball Court', 10.82570000, 77.02250000),
+(75, 'Volleyball Court', 'Volleyball Court', 'Volleyball Court', 10.82560000, 77.02270000),
+(76, 'Kabaddi Court', 'Kabaddi Court', 'Kabaddi Court', 10.82540000, 77.02290000),
+(77, 'Ball Badminton Court', 'Ball Badminton Court', 'Ball Badminton Court', 10.82530000, 77.02310000),
+(78, 'Cricket Nets', 'Cricket Nets', 'Cricket Practice Nets & Pavilion', 10.82500000, 77.02280000),
+(79, 'Temple', 'Temple', 'Campus Vinayagar Temple', 10.82550000, 77.02020000),
+(80, 'ATM', 'ATM', 'Campus Bank ATM Counter', 10.82570000, 77.02060000),
+(81, 'Power House', 'Power House', 'Power House & Electrical Substation', 10.82560000, 77.02120000),
+(82, 'Transformer', 'Transformer', 'High-Voltage Transformer Yard', 10.82550000, 77.02140000),
+(83, 'Parking', 'Parking', 'Faculty, Student & Bus Parking Bays', 10.82500000, 77.02080000),
+(84, 'Security Gate 1', 'Security Gate 1', 'Security Gate 1 (Main Campus Entrance)', 10.82420000, 77.02000000),
+(85, 'Security Gate 2', 'Security Gate 2', 'Security Gate 2 (Service / Transport Gate)', 10.82420000, 77.02080000)
 ON DUPLICATE KEY UPDATE building_name = VALUES(building_name);
 
 -- 3. SEED DEFAULT ADMIN USER (Password: Admin@123)

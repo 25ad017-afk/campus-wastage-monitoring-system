@@ -156,6 +156,11 @@ const Navbar = () => {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/campus-map" className={`nav-link ${isActive('/campus-map') || isActive('/map') ? 'active' : ''}`}>
+                    <MapPin size={15} /> Campus Map
+                  </Link>
+                </li>
+                <li>
                   <Link to="/login" className="btn btn-secondary btn-sm">
                     Portal Sign In
                   </Link>
@@ -186,6 +191,11 @@ const Navbar = () => {
                         <Files size={15} /> My Reports
                       </Link>
                     </li>
+                    <li>
+                      <Link to="/campus-map" className={`nav-link ${isActive('/campus-map') || isActive('/map') ? 'active' : ''}`}>
+                        <MapPin size={15} /> Campus Map
+                      </Link>
+                    </li>
                   </>
                 )}
 
@@ -198,7 +208,7 @@ const Navbar = () => {
                       </Link>
                     </li>
                     <li>
-                      <Link to="/admin/map" className={`nav-link ${isActive('/admin/map') ? 'active' : ''}`}>
+                      <Link to="/admin/map" className={`nav-link ${isActive('/admin/map') || isActive('/campus-map') ? 'active' : ''}`}>
                         <MapPin size={15} /> Campus Map
                       </Link>
                     </li>
@@ -231,6 +241,11 @@ const Navbar = () => {
                     <li>
                       <Link to="/staff/history" className={`nav-link ${isActive('/staff/history') ? 'active' : ''}`}>
                         <CheckCircle2 size={15} /> Resolution History
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/campus-map" className={`nav-link ${isActive('/campus-map') || isActive('/map') ? 'active' : ''}`}>
+                        <MapPin size={15} /> Campus Map
                       </Link>
                     </li>
                   </>

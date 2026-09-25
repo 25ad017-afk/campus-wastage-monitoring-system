@@ -105,7 +105,39 @@ class EmbeddedDatabase {
       { location_id: 54, zone_name: 'Waste Collection Area', building_name: 'Waste Collection Area', floor_or_landmark: 'Waste Storage Area', latitude: 10.8247, longitude: 77.0222 },
 
       // 18. Other Campus Area
-      { location_id: 55, zone_name: 'Other Campus Area', building_name: 'Other Campus Area', floor_or_landmark: 'Other Location', latitude: 10.8240, longitude: 77.0210 }
+      { location_id: 55, zone_name: 'Other Campus Area', building_name: 'Other Campus Area', floor_or_landmark: 'Other Location', latitude: 10.8240, longitude: 77.0210 },
+
+      // 19. Official ACET Master Map Specific Blocks & Locations
+      { location_id: 56, zone_name: 'Main Block', building_name: 'Main Block', floor_or_landmark: 'Central Administration & Principal Office', latitude: 10.8260, longitude: 77.0200 },
+      { location_id: 57, zone_name: 'Main Block', building_name: 'Main Block', floor_or_landmark: 'Reception Lobby & Board Room', latitude: 10.8261, longitude: 77.0201 },
+      { location_id: 58, zone_name: 'A Block', building_name: 'A Block', floor_or_landmark: 'ECE Department & Central Library (Ground Floor)', latitude: 10.8268, longitude: 77.0185 },
+      { location_id: 59, zone_name: 'B Block', building_name: 'B Block', floor_or_landmark: 'CSE Department & AI Computing Labs', latitude: 10.8270, longitude: 77.0190 },
+      { location_id: 60, zone_name: 'C Block', building_name: 'C Block', floor_or_landmark: 'CSE Clusters & Smart Seminar Halls', latitude: 10.8272, longitude: 77.0195 },
+      { location_id: 61, zone_name: 'D Block', building_name: 'D Block', floor_or_landmark: 'Science & Humanities (S&H) / First Year Labs', latitude: 10.8274, longitude: 77.0202 },
+      { location_id: 62, zone_name: 'E Block', building_name: 'E Block', floor_or_landmark: 'CIVIL, MECH, EEE, MECT & CAD/CAM Labs', latitude: 10.8276, longitude: 77.0208 },
+      { location_id: 63, zone_name: 'Centres of Excellence', building_name: 'Centres of Excellence', floor_or_landmark: 'Akshaya Thulir Pre-incubation & Research Hub', latitude: 10.8278, longitude: 77.0215 },
+      { location_id: 64, zone_name: 'Workshop', building_name: 'Workshop', floor_or_landmark: 'Machine Shop, Foundry & Welding Units', latitude: 10.8265, longitude: 77.0182 },
+      { location_id: 65, zone_name: 'Training Centre', building_name: 'Training Centre', floor_or_landmark: 'Placement & Corporate Training Cell', latitude: 10.8266, longitude: 77.0188 },
+      { location_id: 66, zone_name: 'Auditorium', building_name: 'Auditorium', floor_or_landmark: 'Main Auditorium (1500+ Capacity)', latitude: 10.8265, longitude: 77.0220 },
+      { location_id: 67, zone_name: 'Food Court & Amenities', building_name: 'Food Court & Amenities', floor_or_landmark: 'Dining Hall & Central Kitchen', latitude: 10.8268, longitude: 77.0222 },
+      { location_id: 68, zone_name: 'Cafeteria', building_name: 'Cafeteria', floor_or_landmark: 'Cafeteria & Refreshment Kiosk', latitude: 10.8258, longitude: 77.0205 },
+      { location_id: 69, zone_name: 'Recreation Center', building_name: 'Recreation Center', floor_or_landmark: 'Indoor Games & Student Activity Wing', latitude: 10.8252, longitude: 77.0185 },
+      { location_id: 70, zone_name: 'Gym', building_name: 'Gym', floor_or_landmark: 'Fitness Center & Gymnasium', latitude: 10.8253, longitude: 77.0189 },
+      { location_id: 71, zone_name: 'Boys Hostel', building_name: 'Boys Hostel', floor_or_landmark: 'Boys Hostel Residential Blocks & Mess', latitude: 10.8245, longitude: 77.0185 },
+      { location_id: 72, zone_name: 'Girls Hostel', building_name: 'Girls Hostel', floor_or_landmark: 'Girls Hostel Residential Blocks & Mess', latitude: 10.8245, longitude: 77.0192 },
+      { location_id: 73, zone_name: 'Playground', building_name: 'Playground', floor_or_landmark: 'Main Athletic Track & Sports Ground', latitude: 10.8255, longitude: 77.0228 },
+      { location_id: 74, zone_name: 'Basketball Court', building_name: 'Basketball Court', floor_or_landmark: 'Outdoor Synthetic Basketball Court', latitude: 10.8257, longitude: 77.0225 },
+      { location_id: 75, zone_name: 'Volleyball Court', building_name: 'Volleyball Court', floor_or_landmark: 'Volleyball Court', latitude: 10.8256, longitude: 77.0227 },
+      { location_id: 76, zone_name: 'Kabaddi Court', building_name: 'Kabaddi Court', floor_or_landmark: 'Kabaddi Court', latitude: 10.8254, longitude: 77.0229 },
+      { location_id: 77, zone_name: 'Ball Badminton Court', building_name: 'Ball Badminton Court', floor_or_landmark: 'Ball Badminton Court', latitude: 10.8253, longitude: 77.0231 },
+      { location_id: 78, zone_name: 'Cricket Nets', building_name: 'Cricket Nets', floor_or_landmark: 'Cricket Practice Nets & Pavilion', latitude: 10.8250, longitude: 77.0228 },
+      { location_id: 79, zone_name: 'Temple', building_name: 'Temple', floor_or_landmark: 'Campus Vinayagar Temple', latitude: 10.8255, longitude: 77.0202 },
+      { location_id: 80, zone_name: 'ATM', building_name: 'ATM', floor_or_landmark: 'Campus Bank ATM Counter', latitude: 10.8257, longitude: 77.0206 },
+      { location_id: 81, zone_name: 'Power House', building_name: 'Power House', floor_or_landmark: 'Power House & Electrical Substation', latitude: 10.8256, longitude: 77.0212 },
+      { location_id: 82, zone_name: 'Transformer', building_name: 'Transformer', floor_or_landmark: 'High-Voltage Transformer Yard', latitude: 10.8255, longitude: 77.0214 },
+      { location_id: 83, zone_name: 'Parking', building_name: 'Parking', floor_or_landmark: 'Faculty, Student & Bus Parking Bays', latitude: 10.8250, longitude: 77.0208 },
+      { location_id: 84, zone_name: 'Security Gate 1', building_name: 'Security Gate 1', floor_or_landmark: 'Security Gate 1 (Main Campus Entrance)', latitude: 10.8242, longitude: 77.0200 },
+      { location_id: 85, zone_name: 'Security Gate 2', building_name: 'Security Gate 2', floor_or_landmark: 'Security Gate 2 (Service / Transport Gate)', latitude: 10.8242, longitude: 77.0208 }
     ];
 
     this.users = [

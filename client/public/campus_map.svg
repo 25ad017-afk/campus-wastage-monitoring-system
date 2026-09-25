@@ -1,0 +1,283 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" style="background: #f8fafc; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
+    </linearGradient>
+    <linearGradient id="mainBlockGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#047857"/>
+      <stop offset="100%" stop-color="#065f46"/>
+    </linearGradient>
+    <linearGradient id="academicGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="hostelGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#5b21b6"/>
+    </linearGradient>
+    <linearGradient id="amenityGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="sportsGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="utilityGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- Background / Campus Perimeter -->
+  <rect width="1600" height="1000" fill="url(#bgGrad)" />
+  
+  <!-- Campus Boundary Fence -->
+  <rect x="25" y="25" width="1550" height="950" rx="20" fill="#ffffff" stroke="#cbd5e1" stroke-width="3" stroke-dasharray="12 6" filter="url(#dropShadow)"/>
+
+  <!-- Green Lawns / Landscaping Areas -->
+  <path d="M 50 110 L 530 110 L 530 280 L 50 280 Z" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.5" rx="12"/>
+  <path d="M 1070 110 L 1550 110 L 1550 280 L 1070 280 Z" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5" rx="12"/>
+  <path d="M 50 530 L 530 530 L 530 840 L 50 840 Z" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5" rx="12"/>
+  <path d="M 1030 530 L 1550 530 L 1550 840 L 1030 840 Z" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.5" rx="12"/>
+
+  <!-- Main Ring Road & Walkways -->
+  <path d="M 100 450 L 1500 450 M 560 80 L 560 920 M 1010 80 L 1010 920" stroke="#e2e8f0" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M 100 450 L 1500 450 M 560 80 L 560 920 M 1010 80 L 1010 920" stroke="#94a3b8" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M 100 450 L 1500 450 M 560 80 L 560 920 M 1010 80 L 1010 920" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="14 10" fill="none"/>
+
+  <!-- Secondary Pathways -->
+  <path d="M 280 260 L 280 640 M 785 100 L 785 900 M 1280 260 L 1280 640" stroke="#cbd5e1" stroke-width="14" stroke-linecap="round" fill="none"/>
+
+  <!-- ==================== CAMPUS BUILDINGS & BLOCKS ==================== -->
+
+  <!-- 1. MAIN BLOCK (Administration, Reception, Board Rooms) -->
+  <g id="map-main-block" filter="url(#dropShadow)">
+    <rect x="610" y="390" width="350" height="125" rx="12" fill="url(#mainBlockGrad)" stroke="#064e3b" stroke-width="3"/>
+    <rect x="685" y="368" width="200" height="30" rx="6" fill="#f59e0b" stroke="#b45309" stroke-width="1.5"/>
+    <text x="785" y="388" font-size="12" font-weight="800" fill="#ffffff" text-anchor="middle">ADMINISTRATIVE HQ</text>
+    <text x="785" y="432" font-size="20" font-weight="900" fill="#ffffff" text-anchor="middle">MAIN BLOCK</text>
+    <text x="785" y="458" font-size="12" font-weight="600" fill="#a7f3d0" text-anchor="middle">Central Admin • Principal Office • Reception • CoE</text>
+    <text x="785" y="482" font-size="11" font-weight="700" fill="#fef3c7" text-anchor="middle">[Main Entrance Lobby &amp; Board Rooms]</text>
+  </g>
+
+  <!-- 2. A BLOCK (ECE, Central Library) -->
+  <g id="map-a-block" filter="url(#dropShadow)">
+    <rect x="60" y="120" width="210" height="135" rx="10" fill="url(#academicGrad)" stroke="#075985" stroke-width="2.5"/>
+    <rect x="80" y="100" width="100" height="24" rx="5" fill="#0284c7" stroke="#0369a1" stroke-width="1"/>
+    <text x="130" y="116" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">BLOCK A</text>
+    <text x="165" y="155" font-size="16" font-weight="800" fill="#ffffff" text-anchor="middle">A BLOCK</text>
+    <text x="165" y="178" font-size="11" font-weight="700" fill="#bae6fd" text-anchor="middle">ECE Department</text>
+    <text x="165" y="198" font-size="11" font-weight="700" fill="#bae6fd" text-anchor="middle">Central Library (GF)</text>
+    <text x="165" y="222" font-size="10" font-weight="600" fill="#e0f2fe" text-anchor="middle">Digital Library &amp; Reading</text>
+  </g>
+
+  <!-- 3. B BLOCK (CSE Clusters, AI Labs) -->
+  <g id="map-b-block" filter="url(#dropShadow)">
+    <rect x="290" y="120" width="190" height="135" rx="10" fill="url(#academicGrad)" stroke="#075985" stroke-width="2.5"/>
+    <rect x="310" y="100" width="90" height="24" rx="5" fill="#0284c7" stroke="#0369a1" stroke-width="1"/>
+    <text x="355" y="116" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">BLOCK B</text>
+    <text x="385" y="155" font-size="16" font-weight="800" fill="#ffffff" text-anchor="middle">B BLOCK</text>
+    <text x="385" y="178" font-size="11" font-weight="700" fill="#bae6fd" text-anchor="middle">CSE Department</text>
+    <text x="385" y="198" font-size="11" font-weight="700" fill="#bae6fd" text-anchor="middle">AI &amp; Computing Labs</text>
+    <text x="385" y="222" font-size="10" font-weight="600" fill="#e0f2fe" text-anchor="middle">Server Room &amp; Data Hub</text>
+  </g>
+
+  <!-- 4. C BLOCK (CSE Clusters & Smart Classrooms) -->
+  <g id="map-c-block" filter="url(#dropShadow)">
+    <rect x="500" y="120" width="190" height="135" rx="10" fill="url(#academicGrad)" stroke="#075985" stroke-width="2.5"/>
+    <rect x="520" y="100" width="90" height="24" rx="5" fill="#0284c7" stroke="#0369a1" stroke-width="1"/>
+    <text x="565" y="116" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">BLOCK C</text>
+    <text x="595" y="155" font-size="16" font-weight="800" fill="#ffffff" text-anchor="middle">C BLOCK</text>
+    <text x="595" y="178" font-size="11" font-weight="700" fill="#bae6fd" text-anchor="middle">CSE Clusters</text>
+    <text x="595" y="198" font-size="11" font-weight="700" fill="#bae6fd" text-anchor="middle">Multimedia Labs</text>
+    <text x="595" y="222" font-size="10" font-weight="600" fill="#e0f2fe" text-anchor="middle">Smart Seminar Halls</text>
+  </g>
+
+  <!-- 5. D BLOCK (Science & Humanities) -->
+  <g id="map-d-block" filter="url(#dropShadow)">
+    <rect x="710" y="120" width="190" height="135" rx="10" fill="url(#academicGrad)" stroke="#075985" stroke-width="2.5"/>
+    <rect x="730" y="100" width="90" height="24" rx="5" fill="#0284c7" stroke="#0369a1" stroke-width="1"/>
+    <text x="775" y="116" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">BLOCK D</text>
+    <text x="805" y="155" font-size="16" font-weight="800" fill="#ffffff" text-anchor="middle">D BLOCK</text>
+    <text x="805" y="178" font-size="11" font-weight="700" fill="#bae6fd" text-anchor="middle">Science &amp; Humanities</text>
+    <text x="805" y="198" font-size="11" font-weight="700" fill="#bae6fd" text-anchor="middle">Physics &amp; Chemistry</text>
+    <text x="805" y="222" font-size="10" font-weight="600" fill="#e0f2fe" text-anchor="middle">First Year Classrooms</text>
+  </g>
+
+  <!-- 6. E BLOCK (CIVIL, MECH, EEE, MECT) -->
+  <g id="map-e-block" filter="url(#dropShadow)">
+    <rect x="920" y="120" width="220" height="135" rx="10" fill="url(#academicGrad)" stroke="#075985" stroke-width="2.5"/>
+    <rect x="940" y="100" width="90" height="24" rx="5" fill="#0284c7" stroke="#0369a1" stroke-width="1"/>
+    <text x="985" y="116" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">BLOCK E</text>
+    <text x="1030" y="155" font-size="16" font-weight="800" fill="#ffffff" text-anchor="middle">E BLOCK</text>
+    <text x="1030" y="178" font-size="11" font-weight="700" fill="#bae6fd" text-anchor="middle">CIVIL • MECH • EEE • MECT</text>
+    <text x="1030" y="198" font-size="11" font-weight="700" fill="#bae6fd" text-anchor="middle">Engineering &amp; CAD Labs</text>
+    <text x="1030" y="222" font-size="10" font-weight="600" fill="#e0f2fe" text-anchor="middle">Department Faculty Rooms</text>
+  </g>
+
+  <!-- 7. CENTRES OF EXCELLENCE & THULIR PRE-INCUBATION -->
+  <g id="map-coe" filter="url(#dropShadow)">
+    <rect x="1160" y="120" width="200" height="135" rx="10" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+    <text x="1260" y="155" font-size="14" font-weight="800" fill="#38bdf8" text-anchor="middle">CENTRES OF EXCELLENCE</text>
+    <rect x="1175" y="175" width="170" height="60" rx="6" fill="#1e293b" stroke="#0284c7" stroke-width="1"/>
+    <text x="1260" y="198" font-size="12" font-weight="700" fill="#a5f3fc" text-anchor="middle">Akshaya Thulir</text>
+    <text x="1260" y="218" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="middle">Pre-incubation &amp; Startups</text>
+  </g>
+
+  <!-- 8. AUDITORIUM -->
+  <g id="map-auditorium" filter="url(#dropShadow)">
+    <rect x="1380" y="120" width="170" height="135" rx="10" fill="#b45309" stroke="#78350f" stroke-width="2"/>
+    <text x="1465" y="165" font-size="16" font-weight="800" fill="#ffffff" text-anchor="middle">AUDITORIUM</text>
+    <text x="1465" y="190" font-size="11" font-weight="600" fill="#fde68a" text-anchor="middle">Main Conference Hall</text>
+    <text x="1465" y="210" font-size="10" font-weight="600" fill="#fde68a" text-anchor="middle">1500+ Seating Hall</text>
+  </g>
+
+  <!-- 9. WORKSHOP & TRAINING CENTRE -->
+  <g id="map-workshop" filter="url(#dropShadow)">
+    <rect x="60" y="280" width="210" height="110" rx="8" fill="url(#utilityGrad)" stroke="#334155" stroke-width="2"/>
+    <text x="165" y="320" font-size="15" font-weight="800" fill="#ffffff" text-anchor="middle">WORKSHOP</text>
+    <text x="165" y="345" font-size="11" font-weight="600" fill="#cbd5e1" text-anchor="middle">Machine Shop • Foundry</text>
+    <text x="165" y="365" font-size="10" font-weight="600" fill="#cbd5e1" text-anchor="middle">Welding &amp; Carpentry Units</text>
+  </g>
+
+  <g id="map-training-centre" filter="url(#dropShadow)">
+    <rect x="290" y="280" width="190" height="110" rx="8" fill="url(#utilityGrad)" stroke="#334155" stroke-width="2"/>
+    <text x="385" y="320" font-size="15" font-weight="800" fill="#ffffff" text-anchor="middle">TRAINING CENTRE</text>
+    <text x="385" y="345" font-size="11" font-weight="600" fill="#cbd5e1" text-anchor="middle">Placement &amp; Corporate Cell</text>
+    <text x="385" y="365" font-size="10" font-weight="600" fill="#cbd5e1" text-anchor="middle">Skill Development Labs</text>
+  </g>
+
+  <!-- 10. FOOD COURT & AMENITIES / DINING HALL & KITCHEN -->
+  <g id="map-food-court" filter="url(#dropShadow)">
+    <rect x="1160" y="280" width="390" height="110" rx="10" fill="url(#amenityGrad)" stroke="#b45309" stroke-width="2"/>
+    <text x="1355" y="318" font-size="16" font-weight="800" fill="#ffffff" text-anchor="middle">FOOD COURT &amp; AMENITIES</text>
+    <text x="1355" y="342" font-size="12" font-weight="700" fill="#ffffff" text-anchor="middle">Dining Hall &amp; Central Kitchen</text>
+    <text x="1355" y="365" font-size="11" font-weight="600" fill="#fef3c7" text-anchor="middle">Cafeteria • Refreshments • Stores</text>
+  </g>
+
+  <!-- 11. RECREATION CENTER & GYM -->
+  <g id="map-recreation" filter="url(#dropShadow)">
+    <rect x="60" y="530" width="210" height="110" rx="8" fill="#0d9488" stroke="#115e59" stroke-width="2"/>
+    <text x="165" y="570" font-size="15" font-weight="800" fill="#ffffff" text-anchor="middle">RECREATION CENTER</text>
+    <text x="165" y="595" font-size="11" font-weight="600" fill="#ccfbf1" text-anchor="middle">Indoor Games &amp; Activity</text>
+    <text x="165" y="615" font-size="10" font-weight="600" fill="#ccfbf1" text-anchor="middle">Student Club Wing</text>
+  </g>
+
+  <g id="map-gym" filter="url(#dropShadow)">
+    <rect x="290" y="530" width="190" height="110" rx="8" fill="#0d9488" stroke="#115e59" stroke-width="2"/>
+    <text x="385" y="570" font-size="15" font-weight="800" fill="#ffffff" text-anchor="middle">FITNESS &amp; GYM</text>
+    <text x="385" y="595" font-size="11" font-weight="600" fill="#ccfbf1" text-anchor="middle">Men &amp; Women Gym Units</text>
+    <text x="385" y="615" font-size="10" font-weight="600" fill="#ccfbf1" text-anchor="middle">Physical Health Wing</text>
+  </g>
+
+  <!-- 12. HOSTELS (BOYS & GIRLS) -->
+  <g id="map-boys-hostel" filter="url(#dropShadow)">
+    <rect x="60" y="670" width="210" height="135" rx="10" fill="url(#hostelGrad)" stroke="#5b21b6" stroke-width="2"/>
+    <text x="165" y="710" font-size="16" font-weight="800" fill="#ffffff" text-anchor="middle">BOYS HOSTEL</text>
+    <text x="165" y="735" font-size="11" font-weight="600" fill="#ddd6fe" text-anchor="middle">Student Residences</text>
+    <text x="165" y="755" font-size="11" font-weight="600" fill="#ddd6fe" text-anchor="middle">Dining &amp; Study Halls</text>
+    <text x="165" y="778" font-size="10" font-weight="700" fill="#ede9fe" text-anchor="middle">Waste Collection Bay</text>
+  </g>
+
+  <g id="map-girls-hostel" filter="url(#dropShadow)">
+    <rect x="290" y="670" width="190" height="135" rx="10" fill="url(#hostelGrad)" stroke="#5b21b6" stroke-width="2"/>
+    <text x="385" y="710" font-size="16" font-weight="800" fill="#ffffff" text-anchor="middle">GIRLS HOSTEL</text>
+    <text x="385" y="735" font-size="11" font-weight="600" fill="#ddd6fe" text-anchor="middle">Secure Residential Block</text>
+    <text x="385" y="755" font-size="11" font-weight="600" fill="#ddd6fe" text-anchor="middle">Dining &amp; Recreation</text>
+    <text x="385" y="778" font-size="10" font-weight="700" fill="#ede9fe" text-anchor="middle">Waste Collection Bay</text>
+  </g>
+
+  <!-- 13. SPORTS GROUNDS & COURTS -->
+  <g id="map-playground" filter="url(#dropShadow)">
+    <rect x="1030" y="530" width="520" height="275" rx="14" fill="#15803d" stroke="#166534" stroke-width="3"/>
+    <rect x="1050" y="550" width="480" height="235" rx="10" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="8 8"/>
+    <circle cx="1290" cy="667" r="40" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="6 6"/>
+    <text x="1290" y="578" font-size="17" font-weight="900" fill="#ffffff" text-anchor="middle">MAIN SPORTS PLAYGROUND &amp; TRACK</text>
+    
+    <!-- Sub-courts inside Sports Area -->
+    <!-- Basketball Court -->
+    <rect x="1060" y="610" width="105" height="70" rx="6" fill="#c2410c" stroke="#ffffff" stroke-width="1.5"/>
+    <text x="1112" y="648" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">Basketball</text>
+
+    <!-- Volleyball Court -->
+    <rect x="1180" y="610" width="100" height="70" rx="6" fill="#0284c7" stroke="#ffffff" stroke-width="1.5"/>
+    <text x="1230" y="648" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">Volleyball</text>
+
+    <!-- Kabaddi Court -->
+    <rect x="1295" y="610" width="100" height="70" rx="6" fill="#b45309" stroke="#ffffff" stroke-width="1.5"/>
+    <text x="1345" y="648" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">Kabaddi</text>
+
+    <!-- Ball Badminton Court -->
+    <rect x="1410" y="610" width="110" height="70" rx="6" fill="#047857" stroke="#ffffff" stroke-width="1.5"/>
+    <text x="1465" y="648" font-size="10" font-weight="800" fill="#ffffff" text-anchor="middle">Ball Badminton</text>
+
+    <!-- Cricket Practice Nets -->
+    <rect x="1060" y="700" width="460" height="70" rx="6" fill="#166534" stroke="#ffffff" stroke-width="1.5"/>
+    <text x="1290" y="742" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">CRICKET PRACTICE NETS &amp; PAVILION</text>
+  </g>
+
+  <!-- 14. TEMPLE, ATM, CAFETERIA, PARKING & UTILITIES -->
+  <!-- Temple -->
+  <g id="map-temple" filter="url(#dropShadow)">
+    <circle cx="585" y="585" r="32" fill="#ea580c" stroke="#9a3412" stroke-width="2"/>
+    <text x="585" y="590" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">TEMPLE</text>
+  </g>
+
+  <!-- Cafeteria & ATM -->
+  <g id="map-cafeteria" filter="url(#dropShadow)">
+    <rect x="635" y="540" width="150" height="85" rx="8" fill="#d97706" stroke="#b45309" stroke-width="2"/>
+    <text x="710" y="572" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">CAFETERIA</text>
+    <text x="710" y="595" font-size="11" font-weight="700" fill="#fef3c7" text-anchor="middle">ATM Point</text>
+  </g>
+
+  <!-- Power House & Transformer -->
+  <g id="map-power-house" filter="url(#dropShadow)">
+    <rect x="800" y="540" width="170" height="85" rx="8" fill="#475569" stroke="#1e293b" stroke-width="2"/>
+    <text x="885" y="572" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">POWER HOUSE</text>
+    <text x="885" y="595" font-size="11" font-weight="600" fill="#cbd5e1" text-anchor="middle">Main Transformer</text>
+  </g>
+
+  <!-- Parking Areas (Faculty, Student, Visitor, Bus) -->
+  <g id="map-parking" filter="url(#dropShadow)">
+    <rect x="635" y="650" width="335" height="90" rx="8" fill="#334155" stroke="#1e293b" stroke-width="2"/>
+    <text x="802" y="685" font-size="14" font-weight="800" fill="#ffffff" text-anchor="middle">VEHICLE PARKING BAYS</text>
+    <text x="802" y="710" font-size="11" font-weight="600" fill="#94a3b8" text-anchor="middle">Cars • Two-Wheelers • Visitors • College Buses</text>
+  </g>
+
+  <!-- 15. MAIN GATES & ENTRANCES (Gate 1 & Gate 2) -->
+  <!-- Gate 1 (Main Entrance) -->
+  <g id="map-gate-1" filter="url(#dropShadow)">
+    <rect x="635" y="860" width="150" height="75" rx="8" fill="#047857" stroke="#064e3b" stroke-width="2"/>
+    <text x="710" y="892" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">SECURITY GATE 1</text>
+    <text x="710" y="915" font-size="11" font-weight="700" fill="#a7f3d0" text-anchor="middle">Main Entrance</text>
+  </g>
+
+  <!-- Gate 2 (Service / Transport Entrance) -->
+  <g id="map-gate-2" filter="url(#dropShadow)">
+    <rect x="820" y="860" width="150" height="75" rx="8" fill="#047857" stroke="#064e3b" stroke-width="2"/>
+    <text x="895" y="892" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle">SECURITY GATE 2</text>
+    <text x="895" y="915" font-size="11" font-weight="700" fill="#a7f3d0" text-anchor="middle">Transport / Service</text>
+  </g>
+
+  <!-- Header Branding Banner inside Map -->
+  <g filter="url(#dropShadow)">
+    <rect x="50" y="45" width="460" height="50" rx="8" fill="#064e3b" stroke="#047857" stroke-width="2"/>
+    <text x="70" y="70" font-size="14" font-weight="900" fill="#ffffff">AKSHAYA COLLEGE OF ENGINEERING &amp; TECHNOLOGY</text>
+    <text x="70" y="86" font-size="10" font-weight="700" fill="#a7f3d0">ACET OFFICIAL CAMPUS WASTE MONITORING MAP (CWMS)</text>
+  </g>
+
+  <!-- Compass Rose -->
+  <g transform="translate(1510, 75)" filter="url(#dropShadow)">
+    <circle cx="0" cy="0" r="26" fill="#ffffff" stroke="#047857" stroke-width="2"/>
+    <polygon points="0,-20 5,-5 0,-9 -5,-5" fill="#ef4444"/>
+    <polygon points="0,20 5,5 0,9 -5,5" fill="#64748b"/>
+    <polygon points="20,0 5,5 9,0 5,-5" fill="#64748b"/>
+    <polygon points="-20,0 -5,5 -9,0 -5,-5" fill="#64748b"/>
+    <text x="0" y="-23" font-size="10" font-weight="900" fill="#ef4444" text-anchor="middle">N</text>
+  </g>
+</svg>
