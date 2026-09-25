@@ -208,14 +208,6 @@ class AuthController {
    */
   static async sendOtp(req, res, next) {
     try {
-      if (isDemoAuthMode()) {
-        return ApiResponse.success(res, 'Demo Auth Mode is active. Email OTP dispatch is bypassed.', {
-          demoAuthMode: true,
-          emailConfigured: false,
-          cooldownSeconds: 0
-        }, 200);
-      }
-
       const { email, role = 'STUDENT' } = req.body;
 
       if (!email) {
@@ -280,6 +272,14 @@ class AuthController {
             403
           );
         }
+      }
+
+      if (isDemoAuthMode()) {
+        return ApiResponse.success(res, 'Demo Auth Mode is active. Email OTP dispatch is bypassed.', {
+          demoAuthMode: true,
+          emailConfigured: false,
+          cooldownSeconds: 0
+        }, 200);
       }
 
       // Check resend cooldown

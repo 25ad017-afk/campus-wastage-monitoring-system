@@ -4,6 +4,10 @@ Allow: /
 Allow: /assets/
 Allow: /campus_aerial.webp
 Allow: /college_banner.jpeg
+Allow: /acetcbe-logo.png
+Allow: /favicon.ico
+Allow: /favicon.png
+Allow: /apple-touch-icon.png
 Allow: /sitemap.xml
 Allow: /robots.txt
 
