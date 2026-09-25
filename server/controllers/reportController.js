@@ -363,13 +363,17 @@ class ReportController {
         const recipientName = req.user.fullName || createdReport?.reporter_name || 'Campus Member';
 
         if (recipientEmail) {
-          emailService.sendActionConfirmationEmail({
-            to: recipientEmail,
-            recipientName,
-            report: createdReport,
-            actionType: 'NEW_REPORT',
-            baseUrl
-          }).catch(err => console.warn('Action confirmation email delivery non-critical warning:', err.message));
+          // Await email dispatch so Vercel Serverless container does not terminate prematurely before SMTP handshake
+          await Promise.race([
+            emailService.sendActionConfirmationEmail({
+              to: recipientEmail,
+              recipientName,
+              report: createdReport,
+              actionType: 'NEW_REPORT',
+              baseUrl
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Email dispatch timeout')), 8000))
+          ]).catch(err => console.warn('Action confirmation email delivery non-critical warning:', err.message));
         }
       } catch (emailErr) {
         console.warn('Action confirmation email dispatch error:', emailErr.message);

@@ -146,13 +146,16 @@ class AdminController {
             || process.env.CLIENT_URL 
             || (req.headers['x-forwarded-host'] ? `${(req.headers['x-forwarded-proto'] || 'http').split(',')[0]}://${req.headers['x-forwarded-host']}` : 'https://campus-wastage-monitoring-system.vercel.app');
 
-          emailService.sendActionConfirmationEmail({
-            to: staff.email,
-            recipientName: staff.full_name || 'Staff Member',
-            report: updatedReport,
-            actionType: 'STAFF_ASSIGNMENT',
-            baseUrl: baseUrl.replace(/\/$/, '')
-          }).catch(err => console.warn('Staff assignment action email non-critical warning:', err.message));
+          await Promise.race([
+            emailService.sendActionConfirmationEmail({
+              to: staff.email,
+              recipientName: staff.full_name || 'Staff Member',
+              report: updatedReport,
+              actionType: 'STAFF_ASSIGNMENT',
+              baseUrl: baseUrl.replace(/\/$/, '')
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Email dispatch timeout')), 8000))
+          ]).catch(err => console.warn('Staff assignment action email non-critical warning:', err.message));
         } catch (emailErr) {
           console.warn('Staff action confirmation email error:', emailErr.message);
         }

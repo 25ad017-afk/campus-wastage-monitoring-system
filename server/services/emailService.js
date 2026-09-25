@@ -68,6 +68,10 @@ class EmailService {
         host,
         port,
         secure,
+        pool: false, // Ensure fresh connection on serverless execution
+        connectionTimeout: 10000,
+        greetingTimeout: 8000,
+        socketTimeout: 15000,
         auth: {
           user,
           pass
